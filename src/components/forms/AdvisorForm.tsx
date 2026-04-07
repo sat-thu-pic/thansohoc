@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, Baby, Calendar, Search } from 'lucide-react';
+import { User, Baby, Calendar, Search, XCircle } from 'lucide-react';
 
 interface AdvisorFormProps {
   onStart: (data: FormData) => void;
@@ -22,17 +22,50 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
     lastName: '',
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.parentName && formData.birthDate) {
-      // Lấy trực tiếp họ đã nhập (giữ nguyên tên biến parentName để tránh sửa giao tiếp props)
-      const lastName = formData.parentName.trim().toUpperCase();
-      onStart({ ...formData, lastName });
+    setError(null);
+
+    // Kiểm tra Ngày sinh
+    const selectedDate = new Date(formData.birthDate);
+    const today = new Date();
+    // Giới hạn chọn ngày (không quá 100 năm trước và 5 năm sau - dự kiến sinh)
+    if (selectedDate > new Date(today.getFullYear() + 5, 11, 31) || selectedDate < new Date(today.getFullYear() - 100, 0, 1)) {
+      setError('Ngày sinh không hợp lệ.');
+      return;
     }
+
+    if (formData.parentName.trim().length < 2) {
+      setError('Họ nhập vào quá ngắn.');
+      return;
+    }
+
+    // Tách họ (loại bỏ ký tự đặc biệt)
+    const rawLastName = formData.parentName.trim();
+    const lastName = rawLastName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
+      .replace(/[^a-zA-Z\s]/g, '') // Chỉ giữ chữ và khoảng trắng
+      .split(' ')[0]
+      .toUpperCase();
+
+    if (!lastName) {
+      setError('Họ chứa ký tự không hợp lệ.');
+      return;
+    }
+
+    onStart({ ...formData, lastName });
   };
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-2xl shadow-xl border border-advisor-100 flex flex-col gap-6">
+      {error && (
+        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-sm font-medium flex items-center gap-2">
+          <XCircle size={18} /> {error}
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
           <User size={16} /> Họ của Bố hoặc Mẹ

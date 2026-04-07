@@ -15,8 +15,13 @@ const PYTAGO_MAP: Record<string, number> = {
  * Standard A-Z mapping.
  */
 export function mapNameToNumbers(name: string): number[] {
-  return name
-    .toUpperCase()
+  // Loại bỏ dấu tiếng Việt trước khi mapping (nếu có)
+  const cleanName = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+
+  return cleanName
     .split('')
     .filter((char) => /[A-Z]/.test(char))
     .map((char) => PYTAGO_MAP[char]);

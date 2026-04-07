@@ -32,10 +32,8 @@ export default function Home() {
     const birthDateNumbers = getDateDigits(inputData.birthDate);
     const birthDateMask = generateBitmask(birthDateNumbers);
     
-    // Số thiếu hiển thị trên Grid sẽ là số thiếu từ Ngày sinh
     const missingNumbers = getMissingNumbers(birthDateMask);
 
-    // Tạo tổ hợp Tên đệm + Tên chính linh hoạt
     const fatherLastTitle = toTitleCase(fatherLast);
     const motherLastTitle = toTitleCase(motherLast);
     
@@ -52,7 +50,6 @@ export default function Home() {
       });
     });
 
-    // Tính toán Mask cho từng Họ
     const fatherLastMask = generateBitmask(mapNameToNumbers(fatherLast));
     const motherLastMask = generateBitmask(mapNameToNumbers(motherLast));
 
@@ -60,6 +57,7 @@ export default function Home() {
     const fatherBaseMask = birthDateMask | fatherLastMask;
     const fatherMissingMask = ~fatherBaseMask & 511;
     const fatherSuggested = [...possibleCombinations]
+      .filter(comb => (comb.mask & fatherMissingMask) !== 0) // LỌC: Chỉ giữ lại tên bù được ít nhất 1 số thiếu
       .sort((a, b) => {
         const aContribution = (a.mask & fatherMissingMask).toString(2).split('1').length - 1;
         const bContribution = (b.mask & fatherMissingMask).toString(2).split('1').length - 1;
@@ -78,6 +76,7 @@ export default function Home() {
     const motherBaseMask = birthDateMask | motherLastMask;
     const motherMissingMask = ~motherBaseMask & 511;
     const motherSuggested = [...possibleCombinations]
+      .filter(comb => (comb.mask & motherMissingMask) !== 0)
       .sort((a, b) => {
         const aContribution = (a.mask & motherMissingMask).toString(2).split('1').length - 1;
         const bContribution = (b.mask & motherMissingMask).toString(2).split('1').length - 1;
@@ -93,10 +92,10 @@ export default function Home() {
       }));
 
     // 3. Danh sách bé mang Họ KẾT HỢP
-    const combinedLastMask = fatherLastMask | motherLastMask;
-    const combinedBaseMask = birthDateMask | combinedLastMask;
+    const combinedBaseMask = birthDateMask | fatherLastMask | motherLastMask;
     const combinedMissingMask = ~combinedBaseMask & 511;
     const combinedSuggested = [...possibleCombinations]
+      .filter(comb => (comb.mask & combinedMissingMask) !== 0)
       .sort((a, b) => {
         const aContribution = (a.mask & combinedMissingMask).toString(2).split('1').length - 1;
         const bContribution = (b.mask & combinedMissingMask).toString(2).split('1').length - 1;

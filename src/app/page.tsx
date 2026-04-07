@@ -54,7 +54,7 @@ export default function Home() {
 
     // Tính toán Mask cho từng Họ
     const fatherLastMask = generateBitmask(mapNameToNumbers(fatherLast));
-    const motherLastMask = generateBitmask(motherLastNumbers);
+    const motherLastMask = generateBitmask(mapNameToNumbers(motherLast));
 
     // 1. Danh sách bé mang Họ Bố
     const fatherSuggested = [...possibleCombinations]

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Sparkles, ArrowLeft, RefreshCw, XCircle, MessageSquare } from 'lucide-react';
+import { Sparkles, ArrowLeft, RefreshCw, XCircle, MessageSquare, CheckCircle2 } from 'lucide-react';
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
 import EnergyGrid from '@/components/visuals/EnergyGrid';
 import NameCard from '@/components/cards/NameCard';
@@ -53,62 +53,49 @@ export default function Home() {
     const fatherLastMask = generateBitmask(mapNameToNumbers(fatherLast));
     const motherLastMask = generateBitmask(mapNameToNumbers(motherLast));
 
-    // 1. Danh sách bé mang Họ Bố
-    const fatherBaseMask = birthDateMask | fatherLastMask;
-    const fatherMissingMask = ~fatherBaseMask & 511;
-    const fatherSuggested = [...possibleCombinations]
-      .filter(comb => (comb.mask & fatherMissingMask) !== 0) // LỌC: Chỉ giữ lại tên bù được ít nhất 1 số thiếu
-      .sort((a, b) => {
-        const aContribution = (a.mask & fatherMissingMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & fatherMissingMask).toString(2).split('1').length - 1;
-        return bContribution - aContribution;
-      })
-      .slice(0, 10)
-      .map(comb => ({
-        name: `${fatherLastTitle} ${comb.name}`,
-        gender: inputData.babyGender,
-        mask: comb.mask,
-        meaning: comb.meaning,
-        type: 'father'
-      }));
+    // Hàm tạo danh sách gợi ý theo từng trường hợp họ
+    const createSuggestions = (lastName: string, lastNameTitle: string, baseMask: number, type: string) => {
+      const currentBaseMask = birthDateMask | baseMask;
+      const currentMissingMask = ~currentBaseMask & 511;
 
-    // 2. Danh sách bé mang Họ Mẹ
-    const motherBaseMask = birthDateMask | motherLastMask;
-    const motherMissingMask = ~motherBaseMask & 511;
-    const motherSuggested = [...possibleCombinations]
-      .filter(comb => (comb.mask & motherMissingMask) !== 0)
-      .sort((a, b) => {
-        const aContribution = (a.mask & motherMissingMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & motherMissingMask).toString(2).split('1').length - 1;
-        return bContribution - aContribution;
-      })
-      .slice(0, 10)
-      .map(comb => ({
-        name: `${motherLastTitle} ${comb.name}`,
-        gender: inputData.babyGender,
-        mask: comb.mask,
-        meaning: comb.meaning,
-        type: 'mother'
-      }));
+      return [...possibleCombinations]
+        .filter(comb => (comb.mask & currentMissingMask) !== 0) // Chỉ lấy tên bù được ít nhất 1 số thiếu
+        .sort((a, b) => {
+          const aTotalMask = currentBaseMask | a.mask;
+          const bTotalMask = currentBaseMask | b.mask;
+          
+          // Ưu tiên 1: Đạt 511 (Cân bằng 100%)
+          const aIsPerfect = aTotalMask === 511 ? 1 : 0;
+          const bIsPerfect = bTotalMask === 511 ? 1 : 0;
+          if (aIsPerfect !== bIsPerfect) return bIsPerfect - aIsPerfect;
 
-    // 3. Danh sách bé mang Họ KẾT HỢP
-    const combinedBaseMask = birthDateMask | fatherLastMask | motherLastMask;
-    const combinedMissingMask = ~combinedBaseMask & 511;
-    const combinedSuggested = [...possibleCombinations]
-      .filter(comb => (comb.mask & combinedMissingMask) !== 0)
-      .sort((a, b) => {
-        const aContribution = (a.mask & combinedMissingMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & combinedMissingMask).toString(2).split('1').length - 1;
-        return bContribution - aContribution;
-      })
-      .slice(0, 10)
-      .map(comb => ({
-        name: `${fatherLastTitle} ${motherLastTitle} ${comb.name}`,
-        gender: inputData.babyGender,
-        mask: comb.mask,
-        meaning: comb.meaning,
-        type: 'combined'
-      }));
+          // Ưu tiên 2: Số lượng số thiếu được bù đắp
+          const aContribution = (a.mask & currentMissingMask).toString(2).split('1').length - 1;
+          const bContribution = (b.mask & currentMissingMask).toString(2).split('1').length - 1;
+          if (aContribution !== bContribution) return bContribution - aContribution;
+
+          // Ưu tiên 3: Độ "sạch" (ít số dư thừa nhất)
+          const aRedundancy = a.mask.toString(2).split('1').length - 1 - aContribution;
+          const bRedundancy = b.mask.toString(2).split('1').length - 1 - bContribution;
+          return aRedundancy - bRedundancy;
+        })
+        .slice(0, 10)
+        .map(comb => ({
+          name: `${lastNameTitle} ${comb.name}`,
+          gender: inputData.babyGender,
+          mask: comb.mask,
+          meaning: comb.meaning,
+          isPerfect: (currentBaseMask | comb.mask) === 511,
+          type: type
+        }));
+    };
+
+    const fatherSuggested = createSuggestions(fatherLast, fatherLastTitle, fatherLastMask, 'father');
+    const motherSuggested = createSuggestions(motherLast, motherLastTitle, motherLastMask, 'mother');
+    
+    // Đối với KẾT HỢP
+    const combinedLastMask = fatherLastMask | motherLastMask;
+    const combinedSuggested = createSuggestions('', `${fatherLastTitle} ${motherLastTitle}`, combinedLastMask, 'combined');
 
     const allNames = fatherLastTitle === motherLastTitle 
       ? [...fatherSuggested] 
@@ -280,14 +267,20 @@ export default function Home() {
                 }
 
                 return (
-                  <NameCard 
-                    key={name.name}
-                    name={name.name}
-                    meaning={name.meaning}
-                    numbers={nameNumbers}
-                    isLoading={isAIHeading && selectedName === name.name}
-                    onSelect={() => handleFetchStorytelling(name.name)}
-                  />
+                  <div key={name.name} className="relative">
+                    {name.isPerfect && (
+                      <div className="absolute -top-2 -right-2 z-20 bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg flex items-center gap-1 animate-bounce">
+                        <CheckCircle2 size={12} /> CÂN BẰNG 100%
+                      </div>
+                    )}
+                    <NameCard 
+                      name={name.name}
+                      meaning={name.meaning}
+                      numbers={nameNumbers}
+                      isLoading={isAIHeading && selectedName === name.name}
+                      onSelect={() => handleFetchStorytelling(name.name)}
+                    />
+                  </div>
                 );
               })}
             </div>

@@ -233,44 +233,42 @@ export default function Home() {
               </div>
               
               {/* Filter Tabs */}
-              <div className="flex bg-white p-1 rounded-xl border border-advisor-100 shadow-sm">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    filterType === 'all' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                  }`}
-                >
-                  TẤT CẢ
-                </button>
-                <button
-                  onClick={() => setFilterType('father')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    filterType === 'father' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                  }`}
-                >
-                  HỌ BỐ ({analysis?.fatherLast})
-                </button>
-                {!analysis?.isSameLast && (
-                  <>
-                    <button
-                      onClick={() => setFilterType('mother')}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                        filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                      }`}
-                    >
-                      HỌ MẸ ({analysis?.motherLast})
-                    </button>
-                    <button
-                      onClick={() => setFilterType('combined')}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                        filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                      }`}
-                    >
-                      KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
-                    </button>
-                  </>
-                )}
-              </div>
+              {!analysis?.isSameLast && (
+                <div className="flex bg-white p-1 rounded-xl border border-advisor-100 shadow-sm">
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      filterType === 'all' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    }`}
+                  >
+                    TẤT CẢ
+                  </button>
+                  <button
+                    onClick={() => setFilterType('father')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      filterType === 'father' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    }`}
+                  >
+                    HỌ BỐ ({analysis?.fatherLast})
+                  </button>
+                  <button
+                    onClick={() => setFilterType('mother')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    }`}
+                  >
+                    HỌ MẸ ({analysis?.motherLast})
+                  </button>
+                  <button
+                    onClick={() => setFilterType('combined')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    }`}
+                  >
+                    KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

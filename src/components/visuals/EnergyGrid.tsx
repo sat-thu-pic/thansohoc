@@ -19,8 +19,8 @@ export default function EnergyGrid({ mask, lifePath }: EnergyGridProps) {
   return (
     <div className="flex flex-col items-center gap-8 bg-white p-8 rounded-2xl border border-advisor-100 shadow-lg">
       <div className="text-center">
-        <h3 className="text-lg font-bold text-advisor-900 mb-2">Biểu đồ năng lượng của Họ</h3>
-        <p className="text-sm text-advisor-500 italic">Các ô màu đỏ là những rung động bé đang còn thiếu</p>
+        <h3 className="text-lg font-bold text-advisor-900 mb-2">Biểu đồ năng lượng Ngày sinh</h3>
+        <p className="text-sm text-advisor-500 italic">Những rung động bản mệnh cố định của bé</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

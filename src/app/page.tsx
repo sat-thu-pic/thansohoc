@@ -135,10 +135,9 @@ export default function Home() {
 
   const currentMask = useMemo(() => {
     if (!analysis) return 0;
-    if (filterType === 'all' || filterType === 'combined') return analysis.combinedMask;
-    if (filterType === 'father') return analysis.fatherMask;
-    return analysis.motherMask;
-  }, [analysis, filterType]);
+    // Luôn hiển thị năng lượng gốc từ Ngày sinh
+    return analysis.lastNameMask; 
+  }, [analysis]);
 
   const currentMissingNumbers = useMemo(() => {
     return getMissingNumbers(currentMask);
@@ -225,8 +224,8 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-sm text-slate-500 leading-relaxed">
-                {filterType === 'all' ? 'Tổng hợp cả hai họ' : `Họ ${filterType === 'father' ? analysis!.fatherLast : analysis!.motherLast}`} mang năng lượng mạnh nhưng thiếu các rung động trên. Những cái tên gợi ý sẽ giúp bù đắp để đạt sự cân bằng 1-9.
+              <p className="mt-4 text-sm text-slate-500 leading-relaxed italic">
+                Đây là các năng lượng bé còn thiếu từ nền tảng Ngày sinh. Những cái tên dưới đây được gợi ý để bù đắp và kích hoạt sự cân bằng 1-9 cho hành trình của bé.
               </p>
             </div>
           </div>

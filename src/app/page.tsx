@@ -245,7 +245,7 @@ export default function Home() {
                     filterType === 'father' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
                   }`}
                 >
-                  HỌ BỐ ({analysis.fatherLast})
+                  HỌ BỐ ({analysis?.fatherLast})
                 </button>
                 <button
                   onClick={() => setFilterType('mother')}
@@ -253,7 +253,7 @@ export default function Home() {
                     filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
                   }`}
                 >
-                  HỌ MẸ ({analysis.motherLast})
+                  HỌ MẸ ({analysis?.motherLast})
                 </button>
                 <button
                   onClick={() => setFilterType('combined')}
@@ -261,7 +261,7 @@ export default function Home() {
                     filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
                   }`}
                 >
-                  KẾT HỢP ({analysis.fatherLast} {analysis.motherLast})
+                  KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
                 </button>
               </div>
             </div>

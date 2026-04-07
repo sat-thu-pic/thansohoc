@@ -26,13 +26,18 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
 
   const [error, setError] = useState<string | null>(null);
 
-  const cleanName = (name: string) => {
+  const cleanNameStrict = (name: string) => {
     return name
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z\s]/g, '')
-      .trim()
-      .toUpperCase();
+      .normalize('NFD') // Tách dấu
+      .replace(/[\u0300-\u036f]/g, '') // Xóa dấu tiếng Việt tạm thời để lọc
+      .replace(/[^a-zA-Z\s]/g, '') // CHỈ giữ lại chữ cái A-Z và khoảng trắng, xóa SỐ và KÝ TỰ ĐẶC BIỆT
+      .trim();
+  };
+
+  // Hàm giữ lại dấu nhưng xóa số/icon để hiển thị
+  const cleanDisplayFull = (name: string) => {
+    // Regex này giữ lại các ký tự chữ cái bao gồm cả các chữ có dấu Tiếng Việt và xóa mọi thứ khác
+    return name.replace(/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?¿\d]/g, '').trim();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,16 +50,20 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
       return;
     }
 
-    const fatherLast = formData.parentName.trim();
-    const motherLast = formData.motherLastName.trim();
+    const fatherLastRaw = cleanDisplayFull(formData.parentName);
+    const motherLastRaw = cleanDisplayFull(formData.motherLastName);
 
-    if (!fatherLast || !motherLast) {
-      setError('Vui lòng nhập đầy đủ họ của cả Bố và Mẹ.');
+    if (fatherLastRaw.length < 2 || motherLastRaw.length < 2) {
+      setError('Họ phải là chữ cái và có ít nhất 2 ký tự.');
       return;
     }
 
-    // Gửi cả họ gốc (có dấu) và tính toán sau
-    onStart({ ...formData, parentName: fatherLast, motherLastName: motherLast });
+    // Gửi dữ liệu đã được làm sạch (không số, không ký tự lạ)
+    onStart({ 
+      ...formData, 
+      parentName: fatherLastRaw, 
+      motherLastName: motherLastRaw 
+    });
   };
 
   return (

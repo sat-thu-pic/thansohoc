@@ -5,7 +5,7 @@ import { Sparkles, ArrowLeft, RefreshCw, XCircle, MessageSquare } from 'lucide-r
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
 import EnergyGrid from '@/components/visuals/EnergyGrid';
 import NameCard from '@/components/cards/NameCard';
-import { mapNameToNumbers, calculateLifePath } from '@/lib/numerology';
+import { mapNameToNumbers, calculateLifePath, getDateDigits } from '@/lib/numerology';
 import { generateBitmask, getMissingNumbers, filterBalancedNames, NameRecord } from '@/lib/bitmask';
 import middleNames from '@/data/middleNames.json';
 import firstNames from '@/data/firstNames.json';
@@ -28,19 +28,18 @@ export default function Home() {
     const motherLast = inputData.motherLastName.trim();
     const lifePath = calculateLifePath(inputData.birthDate);
 
-    // Tính toán cho trường hợp KẾT HỢP cả 2 họ
-    const combinedLastName = `${fatherLast} ${motherLast}`;
-    const combinedLastNumbers = mapNameToNumbers(combinedLastName);
-    const combinedLastMask = generateBitmask(combinedLastNumbers);
-    const missingNumbers = getMissingNumbers(combinedLastMask);
+    // NỀN TẢNG GỐC: Các con số trong Ngày sinh
+    const birthDateNumbers = getDateDigits(inputData.birthDate);
+    const birthDateMask = generateBitmask(birthDateNumbers);
+    
+    // Số thiếu hiển thị trên Grid sẽ là số thiếu từ Ngày sinh
+    const missingNumbers = getMissingNumbers(birthDateMask);
 
     // Tạo tổ hợp Tên đệm + Tên chính linh hoạt
     const fatherLastTitle = toTitleCase(fatherLast);
     const motherLastTitle = toTitleCase(motherLast);
     
-    // Tạo danh sách tất cả các tổ hợp tên lót + tên chính cân bằng
     const possibleCombinations: { name: string, mask: number, meaning: string }[] = [];
-    
     middleNames.forEach(m => {
       if (m.gender !== 'neutral' && m.gender !== inputData.babyGender) return;
       firstNames.forEach(f => {
@@ -53,16 +52,22 @@ export default function Home() {
       });
     });
 
+    // Tính toán Mask cho từng Họ
+    const fatherLastMask = generateBitmask(mapNameToNumbers(fatherLast));
+    const motherLastMask = generateBitmask(motherLastNumbers);
+
     // 1. Danh sách bé mang Họ Bố
-    const fatherLastNumbers = mapNameToNumbers(fatherLast);
-    const fatherLastMask = generateBitmask(fatherLastNumbers);
     const fatherSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        const aContribution = (a.mask & ~fatherLastMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & ~fatherLastMask).toString(2).split('1').length - 1;
+        // Độ cân bằng = (Ngày sinh | Họ Bố | Tên Chọn)
+        const aTotalMask = birthDateMask | fatherLastMask | a.mask;
+        const bTotalMask = birthDateMask | fatherLastMask | b.mask;
+        
+        const aContribution = aTotalMask.toString(2).split('1').length - 1;
+        const bContribution = bTotalMask.toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
-      .slice(0, 8)
+      .slice(0, 10)
       .map(comb => ({
         name: `${fatherLastTitle} ${comb.name}`,
         gender: inputData.babyGender,
@@ -72,15 +77,16 @@ export default function Home() {
       }));
 
     // 2. Danh sách bé mang Họ Mẹ
-    const motherLastNumbers = mapNameToNumbers(motherLast);
-    const motherLastMask = generateBitmask(motherLastNumbers);
     const motherSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        const aContribution = (a.mask & ~motherLastMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & ~motherLastMask).toString(2).split('1').length - 1;
+        const aTotalMask = birthDateMask | motherLastMask | a.mask;
+        const bTotalMask = birthDateMask | motherLastMask | b.mask;
+        
+        const aContribution = aTotalMask.toString(2).split('1').length - 1;
+        const bContribution = bTotalMask.toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
-      .slice(0, 8)
+      .slice(0, 10)
       .map(comb => ({
         name: `${motherLastTitle} ${comb.name}`,
         gender: inputData.babyGender,
@@ -89,14 +95,18 @@ export default function Home() {
         type: 'mother'
       }));
 
-    // 3. Danh sách bé mang Họ KẾT HỢP (Bố + Mẹ)
+    // 3. Danh sách bé mang Họ KẾT HỢP
+    const combinedLastMask = fatherLastMask | motherLastMask;
     const combinedSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        const aContribution = (a.mask & ~combinedLastMask).toString(2).split('1').length - 1;
-        const bContribution = (b.mask & ~combinedLastMask).toString(2).split('1').length - 1;
+        const aTotalMask = birthDateMask | combinedLastMask | a.mask;
+        const bTotalMask = birthDateMask | combinedLastMask | b.mask;
+        
+        const aContribution = aTotalMask.toString(2).split('1').length - 1;
+        const bContribution = bTotalMask.toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
-      .slice(0, 8)
+      .slice(0, 10)
       .map(comb => ({
         name: `${fatherLastTitle} ${motherLastTitle} ${comb.name}`,
         gender: inputData.babyGender,
@@ -105,16 +115,15 @@ export default function Home() {
         type: 'combined'
       }));
 
-    // Gộp tất cả danh sách lại
     const allNames = fatherLastTitle === motherLastTitle 
-      ? [...fatherSuggested] // Nếu họ giống nhau, chỉ lấy danh sách họ bố (đã bao gồm họ mẹ)
+      ? [...fatherSuggested] 
       : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
     return {
-      lastNameMask: combinedLastMask,
-      fatherMask: fatherLastMask,
-      motherMask: motherLastMask,
-      combinedMask: combinedLastMask,
+      lastNameMask: birthDateMask, // Dùng mask ngày sinh để hiển thị Grid mặc định
+      fatherMask: birthDateMask | fatherLastMask,
+      motherMask: birthDateMask | motherLastMask,
+      combinedMask: birthDateMask | fatherLastMask | motherLastMask,
       lifePath,
       missingNumbers,
       allNames,

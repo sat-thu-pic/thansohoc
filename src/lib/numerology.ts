@@ -45,3 +45,12 @@ export function calculateLifePath(birthDate: string): number {
 
   return sum;
 }
+
+export function getDateDigits(date: string): number[] {
+  // date format: YYYY-MM-DD
+  return date
+    .replace(/-/g, '')
+    .split('')
+    .map(Number)
+    .filter((n) => n > 0); // Thần số học Pytago không tính số 0
+}

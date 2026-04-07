@@ -57,14 +57,12 @@ export default function Home() {
     const motherLastMask = generateBitmask(mapNameToNumbers(motherLast));
 
     // 1. Danh sách bé mang Họ Bố
+    const fatherBaseMask = birthDateMask | fatherLastMask;
+    const fatherMissingMask = ~fatherBaseMask & 511;
     const fatherSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        // Độ cân bằng = (Ngày sinh | Họ Bố | Tên Chọn)
-        const aTotalMask = birthDateMask | fatherLastMask | a.mask;
-        const bTotalMask = birthDateMask | fatherLastMask | b.mask;
-        
-        const aContribution = aTotalMask.toString(2).split('1').length - 1;
-        const bContribution = bTotalMask.toString(2).split('1').length - 1;
+        const aContribution = (a.mask & fatherMissingMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & fatherMissingMask).toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
       .slice(0, 10)
@@ -77,13 +75,12 @@ export default function Home() {
       }));
 
     // 2. Danh sách bé mang Họ Mẹ
+    const motherBaseMask = birthDateMask | motherLastMask;
+    const motherMissingMask = ~motherBaseMask & 511;
     const motherSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        const aTotalMask = birthDateMask | motherLastMask | a.mask;
-        const bTotalMask = birthDateMask | motherLastMask | b.mask;
-        
-        const aContribution = aTotalMask.toString(2).split('1').length - 1;
-        const bContribution = bTotalMask.toString(2).split('1').length - 1;
+        const aContribution = (a.mask & motherMissingMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & motherMissingMask).toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
       .slice(0, 10)
@@ -97,13 +94,12 @@ export default function Home() {
 
     // 3. Danh sách bé mang Họ KẾT HỢP
     const combinedLastMask = fatherLastMask | motherLastMask;
+    const combinedBaseMask = birthDateMask | combinedLastMask;
+    const combinedMissingMask = ~combinedBaseMask & 511;
     const combinedSuggested = [...possibleCombinations]
       .sort((a, b) => {
-        const aTotalMask = birthDateMask | combinedLastMask | a.mask;
-        const bTotalMask = birthDateMask | combinedLastMask | b.mask;
-        
-        const aContribution = aTotalMask.toString(2).split('1').length - 1;
-        const bContribution = bTotalMask.toString(2).split('1').length - 1;
+        const aContribution = (a.mask & combinedMissingMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & combinedMissingMask).toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
       .slice(0, 10)
@@ -120,7 +116,7 @@ export default function Home() {
       : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
     return {
-      lastNameMask: birthDateMask, // Dùng mask ngày sinh để hiển thị Grid mặc định
+      lastNameMask: birthDateMask,
       fatherMask: birthDateMask | fatherLastMask,
       motherMask: birthDateMask | motherLastMask,
       combinedMask: birthDateMask | fatherLastMask | motherLastMask,
@@ -135,7 +131,6 @@ export default function Home() {
 
   const currentMask = useMemo(() => {
     if (!analysis) return 0;
-    // Luôn hiển thị năng lượng gốc từ Ngày sinh
     return analysis.lastNameMask; 
   }, [analysis]);
 
@@ -153,7 +148,7 @@ export default function Home() {
     setInputData(data);
     setStorytelling(null);
     setSelectedName(null);
-    setFilterType('all'); // Reset filter khi bắt đầu tư vấn mới
+    setFilterType('all');
   };
 
   const handleFetchStorytelling = async (name: string) => {
@@ -210,7 +205,6 @@ export default function Home() {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sidebar: Analysis */}
           <div className="flex flex-col gap-8">
             <EnergyGrid mask={currentMask} lifePath={analysis!.lifePath} />
             <div className="bg-white p-6 rounded-2xl border border-advisor-100 shadow-lg">
@@ -230,7 +224,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Main Content: Suggested Names */}
           <div className="lg:col-span-2 flex flex-col gap-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
               <div>
@@ -240,7 +233,6 @@ export default function Home() {
                 <p className="text-advisor-500 text-sm italic">Nhấn vào thẻ tên để xem Storytelling từ AI</p>
               </div>
               
-              {/* Filter Tabs */}
               {!analysis?.isSameLast && (
                 <div className="flex bg-white p-1 rounded-xl border border-advisor-100 shadow-sm">
                   <button
@@ -281,7 +273,6 @@ export default function Home() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredNames.map((name: any) => {
-                // Tính toán danh sách số từ mask của tên
                 const nameNumbers: number[] = [];
                 for (let i = 1; i <= 9; i++) {
                   if (name.mask & (1 << (i - 1))) {
@@ -302,7 +293,6 @@ export default function Home() {
               })}
             </div>
 
-            {/* AI Storytelling Result */}
             {storytelling && (
               <div className="mt-8 bg-white p-8 rounded-3xl border-2 border-advisor-500 shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 text-advisor-100 group-hover:text-advisor-200 transition-colors">

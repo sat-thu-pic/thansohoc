@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Hệ thống cố vấn đặt tên cân bằng theo Thần số học Pytago",
 };
 
+import SecurityProvider from "@/components/providers/SecurityProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,7 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <SecurityProvider>{children}</SecurityProvider>
+      </body>
     </html>
   );
 }

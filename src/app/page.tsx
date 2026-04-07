@@ -15,63 +15,117 @@ export default function Home() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [storytelling, setStorytelling] = useState<string | null>(null);
   const [isAIHeading, setIsAIHeading] = useState(false);
+  const [filterType, setFilterType] = useState<'all' | 'father' | 'mother'>('all');
 
   const analysis = useMemo(() => {
     if (!inputData) return null;
-    const lastNameNumbers = mapNameToNumbers(inputData.lastName);
+
+    const toTitleCase = (str: string) => {
+      return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    };
+
+    const fatherLast = inputData.parentName.trim();
+    const motherLast = inputData.motherLastName.trim();
+
+    // Tính toán số thiếu dựa trên tổng năng lượng của cả 2 họ (dùng bản không dấu để tính)
+    const combinedLastName = `${fatherLast} ${motherLast}`;
+    const lastNameNumbers = mapNameToNumbers(combinedLastName);
     const lastNameMask = generateBitmask(lastNameNumbers);
     const lifePath = calculateLifePath(inputData.birthDate);
     const missingNumbers = getMissingNumbers(lastNameMask);
-    
+
     // Tạo tổ hợp Tên đệm + Tên chính linh hoạt
-    const allPossibleNames: NameRecord[] = [];
+    const fatherLastTitle = toTitleCase(fatherLast);
+    const motherLastTitle = toTitleCase(motherLast);
+    
+    // Tạo danh sách tất cả các tổ hợp tên lót + tên chính cân bằng
+    const possibleCombinations: { name: string, mask: number, meaning: string }[] = [];
     
     middleNames.forEach(m => {
-      // Lọc giới tính cho tên đệm
       if (m.gender !== 'neutral' && m.gender !== inputData.babyGender) return;
-      
       firstNames.forEach(f => {
-        // Lọc giới tính cho tên chính
         if (f.gender !== 'neutral' && f.gender !== inputData.babyGender) return;
-        
-        allPossibleNames.push({
+        possibleCombinations.push({
           name: `${m.name} ${f.name}`,
-          gender: inputData.babyGender,
           mask: m.mask | f.mask,
           meaning: `${m.meaning} kết hợp với ${f.meaning.toLowerCase()}.`
         });
       });
     });
 
-    // Lọc các tên bù đắp đủ số thiếu
-    let suggestedNames = filterBalancedNames(lastNameMask, allPossibleNames);
-    
-    // Nếu không có tên cân bằng tuyệt đối, lấy các tên bù đắp được nhiều nhất
-    if (suggestedNames.length === 0) {
-      suggestedNames = allPossibleNames
-        .sort((a, b) => {
-          const aContribution = (a.mask & ~lastNameMask).toString(2).split('1').length - 1;
-          const bContribution = (b.mask & ~lastNameMask).toString(2).split('1').length - 1;
-          return bContribution - aContribution;
-        })
-        .slice(0, 6);
-    } else {
-      // Nếu có quá nhiều tên cân bằng, chỉ lấy ngẫu nhiên hoặc top 10
-      suggestedNames = suggestedNames.slice(0, 10);
-    }
+    // Tính toán cho trường hợp bé mang Họ Bố
+    const fatherLastNumbers = mapNameToNumbers(fatherLast);
+    const fatherLastMask = generateBitmask(fatherLastNumbers);
+    const fatherSuggested = [...possibleCombinations]
+      .sort((a, b) => {
+        const aContribution = (a.mask & ~fatherLastMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & ~fatherLastMask).toString(2).split('1').length - 1;
+        return bContribution - aContribution;
+      })
+      .slice(0, 10)
+      .map(comb => ({
+        name: `${fatherLastTitle} ${comb.name}`,
+        gender: inputData.babyGender,
+        mask: comb.mask,
+        meaning: comb.meaning,
+        type: 'father'
+      }));
+
+    // Tính toán cho trường hợp bé mang Họ Mẹ
+    const motherLastNumbers = mapNameToNumbers(motherLast);
+    const motherLastMask = generateBitmask(motherLastNumbers);
+    const motherSuggested = [...possibleCombinations]
+      .sort((a, b) => {
+        const aContribution = (a.mask & ~motherLastMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & ~motherLastMask).toString(2).split('1').length - 1;
+        return bContribution - aContribution;
+      })
+      .slice(0, 10)
+      .map(comb => ({
+        name: `${motherLastTitle} ${comb.name}`,
+        gender: inputData.babyGender,
+        mask: comb.mask,
+        meaning: comb.meaning,
+        type: 'mother'
+      }));
+
+    // Gộp cả 2 danh sách lại
+    const allNames = [...fatherSuggested, ...motherSuggested];
 
     return {
-      lastNameMask,
+      lastNameMask: fatherLastMask | motherLastMask,
+      fatherMask: fatherLastMask,
+      motherMask: motherLastMask,
       lifePath,
       missingNumbers,
-      suggestedNames
+      allNames,
+      fatherLast: fatherLastTitle,
+      motherLast: motherLastTitle
     };
   }, [inputData]);
+
+  const currentMask = useMemo(() => {
+    if (!analysis) return 0;
+    if (filterType === 'all') return analysis.lastNameMask;
+    if (filterType === 'father') return analysis.fatherMask;
+    return analysis.motherMask;
+  }, [analysis, filterType]);
+
+  const currentMissingNumbers = useMemo(() => {
+    return getMissingNumbers(currentMask);
+  }, [currentMask]);
+
+  const filteredNames = useMemo(() => {
+    if (!analysis) return [];
+    if (filterType === 'all') return analysis.allNames;
+    return analysis.allNames.filter(n => (n as any).type === filterType);
+  }, [analysis, filterType]);
 
   const handleStart = (data: FormData) => {
     setInputData(data);
     setStorytelling(null);
     setSelectedName(null);
+    setFilterType('all'); // Reset filter khi bắt đầu tư vấn mới
   };
 
   const handleFetchStorytelling = async (name: string) => {
@@ -130,32 +184,65 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sidebar: Analysis */}
           <div className="flex flex-col gap-8">
-            <EnergyGrid mask={analysis!.lastNameMask} lifePath={analysis!.lifePath} />
+            <EnergyGrid mask={currentMask} lifePath={analysis!.lifePath} />
             <div className="bg-white p-6 rounded-2xl border border-advisor-100 shadow-lg">
               <h4 className="font-bold text-advisor-900 mb-4 flex items-center gap-2">
                 <RefreshCw size={18} className="text-advisor-500" /> Phân tích số thiếu
               </h4>
               <div className="flex flex-wrap gap-2">
-                {analysis!.missingNumbers.map(n => (
+                {currentMissingNumbers.map(n => (
                   <span key={n} className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full font-bold text-sm border border-rose-100">
                     Số {n}
                   </span>
                 ))}
               </div>
               <p className="mt-4 text-sm text-slate-500 leading-relaxed">
-                Họ {inputData.lastName} mang rung động mạnh nhưng thiếu các năng lượng trên. Những cái tên gợi ý sẽ giúp bù đắp để đạt sự cân bằng 1-9.
+                {filterType === 'all' ? 'Tổng hợp cả hai họ' : `Họ ${filterType === 'father' ? analysis!.fatherLast : analysis!.motherLast}`} mang năng lượng mạnh nhưng thiếu các rung động trên. Những cái tên gợi ý sẽ giúp bù đắp để đạt sự cân bằng 1-9.
               </p>
             </div>
           </div>
 
           {/* Main Content: Suggested Names */}
           <div className="lg:col-span-2 flex flex-col gap-6">
-            <h2 className="text-3xl font-black text-advisor-900 uppercase tracking-tight mb-2">
-              Gợi ý tên cân bằng
-            </h2>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+              <div>
+                <h2 className="text-3xl font-black text-advisor-900 uppercase tracking-tight">
+                  Gợi ý tên cân bằng
+                </h2>
+                <p className="text-advisor-500 text-sm italic">Nhấn vào thẻ tên để xem Storytelling từ AI</p>
+              </div>
+              
+              {/* Filter Tabs */}
+              <div className="flex bg-white p-1 rounded-xl border border-advisor-100 shadow-sm">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    filterType === 'all' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  TẤT CẢ
+                </button>
+                <button
+                  onClick={() => setFilterType('father')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    filterType === 'father' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  HỌ BỐ ({analysis.fatherLast})
+                </button>
+                <button
+                  onClick={() => setFilterType('mother')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  HỌ MẸ ({analysis.motherLast})
+                </button>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {analysis!.suggestedNames.map((name) => (
+              {filteredNames.map((name: any) => (
                 <NameCard 
                   key={name.name}
                   name={name.name}

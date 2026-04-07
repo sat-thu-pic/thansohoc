@@ -8,15 +8,17 @@ interface AdvisorFormProps {
 }
 
 export interface FormData {
-  parentName: string;
+  parentName: string; // Họ Bố
+  motherLastName: string; // Họ Mẹ
   babyGender: 'boy' | 'girl' | 'neutral';
   birthDate: string;
-  lastName: string;
+  lastName: string; // Vẫn giữ để tính toán (sẽ gán = Họ Bố)
 }
 
 export default function AdvisorForm({ onStart }: AdvisorFormProps) {
   const [formData, setFormData] = useState<FormData>({
     parentName: '',
+    motherLastName: '',
     babyGender: 'neutral',
     birthDate: '',
     lastName: '',
@@ -24,39 +26,35 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
 
   const [error, setError] = useState<string | null>(null);
 
+  const cleanName = (name: string) => {
+    return name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z\s]/g, '')
+      .trim()
+      .toUpperCase();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Kiểm tra Ngày sinh
     const selectedDate = new Date(formData.birthDate);
-    const today = new Date();
-    // Giới hạn chọn ngày (không quá 100 năm trước và 5 năm sau - dự kiến sinh)
-    if (selectedDate > new Date(today.getFullYear() + 5, 11, 31) || selectedDate < new Date(today.getFullYear() - 100, 0, 1)) {
-      setError('Ngày sinh không hợp lệ.');
+    if (isNaN(selectedDate.getTime())) {
+      setError('Vui lòng chọn ngày sinh hợp lệ.');
       return;
     }
 
-    if (formData.parentName.trim().length < 2) {
-      setError('Họ nhập vào quá ngắn.');
+    const fatherLast = formData.parentName.trim();
+    const motherLast = formData.motherLastName.trim();
+
+    if (!fatherLast || !motherLast) {
+      setError('Vui lòng nhập đầy đủ họ của cả Bố và Mẹ.');
       return;
     }
 
-    // Tách họ (loại bỏ ký tự đặc biệt)
-    const rawLastName = formData.parentName.trim();
-    const lastName = rawLastName
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
-      .replace(/[^a-zA-Z\s]/g, '') // Chỉ giữ chữ và khoảng trắng
-      .split(' ')[0]
-      .toUpperCase();
-
-    if (!lastName) {
-      setError('Họ chứa ký tự không hợp lệ.');
-      return;
-    }
-
-    onStart({ ...formData, lastName });
+    // Gửi cả họ gốc (có dấu) và tính toán sau
+    onStart({ ...formData, parentName: fatherLast, motherLastName: motherLast });
   };
 
   return (
@@ -66,20 +64,36 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
           <XCircle size={18} /> {error}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
-          <User size={16} /> Họ của Bố hoặc Mẹ
-        </label>
-        <input
-          type="text"
-          required
-          value={formData.parentName}
-          onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-          placeholder="Ví dụ: NGUYEN"
-          className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
-        />
-        <p className="text-[10px] text-advisor-400 italic">* Hệ thống sẽ dùng họ này để tính toán số thiếu cho bé.</p>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
+            <User size={16} /> Họ của Bố
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.parentName}
+            onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
+            placeholder="Ví dụ: Nguyễn"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
+            <User size={16} /> Họ của Mẹ
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.motherLastName}
+            onChange={(e) => setFormData({ ...formData, motherLastName: e.target.value })}
+            placeholder="Ví dụ: Trần"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
+          />
+        </div>
       </div>
+      <p className="text-[10px] text-advisor-400 italic -mt-4">* Hệ thống sẽ gợi ý tên theo cả họ Bố và họ Mẹ.</p>
 
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">

@@ -19,8 +19,10 @@ export default function NameCard({ name, meaning, onSelect, isLoading }: NameCar
       }`}
     >
       <div className="flex justify-between items-start">
-        <h4 className="text-2xl font-black text-advisor-900 group-hover:text-advisor-600 transition-colors">{name}</h4>
-        <div className="p-2 bg-advisor-50 text-advisor-500 rounded-lg">
+        <h4 className="text-xl font-black text-advisor-900 group-hover:text-advisor-600 transition-colors whitespace-pre-line leading-relaxed">
+          {name}
+        </h4>
+        <div className="p-2 bg-advisor-50 text-advisor-500 rounded-lg shrink-0">
           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
         </div>
       </div>

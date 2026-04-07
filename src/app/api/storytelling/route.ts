@@ -1,58 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: NextRequest) {
   try {
     const { lastName, name, birthDate, lifePath, missingNumbers } =
       await req.json();
 
-    const prompt = `
-      Bạn là một chuyên gia cố vấn đặt tên theo Thần số học Pytago (Naming Advisor). 
-      Hãy viết một đoạn "Storytelling" (khoảng 150-200 chữ) giải thích ý nghĩa cái tên cho một em bé.
-
-      Thông tin:
-      - Họ của bé: ${lastName}
-      - Tên được chọn: ${name}
-      - Ngày sinh: ${birthDate}
-      - Con số chủ đạo (Life Path): ${lifePath}
-      - Các con số còn thiếu trong họ: ${missingNumbers.join(", ")}
-
-      Yêu cầu:
-      1. Ngôn ngữ: Tiếng Việt, chuyên nghiệp nhưng ấm áp, đầy cảm hứng (Growth/Enhancement).
-      2. Giải thích cách cái tên "${name}" bù đắp các con số thiếu ${missingNumbers.join(", ")} để giúp bộ tên đầy đủ đạt cân bằng 1-9.
-      3. Liên hệ với con số chủ đạo ${lifePath} để đưa ra lời khuyên về tiềm năng phát triển của bé.
-      4. Tuyệt đối không dùng ngôn ngữ tiêu cực. Hãy tập trung vào việc "nâng cấp" và "kích hoạt" năng lượng.
-      5. Kết thúc bằng một câu chúc ý nghĩa cho bé.
-    `;
-
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured" },
+        { error: "GEMINI_API_KEY is not configured in .env.local" },
         { status: 500 },
       );
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      },
-    );
+    // Initialize the SDK
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const data = await response.json();
+    const prompt = `
+      Bạn là một chuyên gia cố vấn đặt tên cao cấp theo Thần số học Pytago (Naming Advisor). 
+      Hãy viết một bài phân tích sâu sắc và đầy cảm hứng (khoảng 200 chữ) về ý nghĩa của cái tên đầy đủ của một em bé.
+
+      Thông tin chi tiết:
+      - Tên đầy đủ của bé: ${name}
+      - Ngày sinh: ${birthDate}
+      - Con số chủ đạo (Life Path): ${lifePath}
+      - Các con số còn thiếu trong nền tảng họ của bé: ${missingNumbers.join(", ")}
+
+      Yêu cầu bài viết:
+      1. Ngôn ngữ: Tiếng Việt, phong cách chuyên nghiệp, ấm áp, mang tính chữa lành và nâng tầm (Growth & Enhancement).
+      2. Giải thích tại sao cái tên "${name}" là sự lựa chọn hoàn hảo để bù đắp các rung động thiếu hụt (${missingNumbers.join(", ")}), giúp bé đạt được sự cân bằng năng lượng tuyệt đối từ 1-9.
+      3. Kết nối tinh tế ý nghĩa cái tên với Con số chủ đạo ${lifePath} để phác họa lộ trình phát triển và tiềm năng vượt trội của bé trong tương lai.
+      4. Tuyệt đối tránh các từ ngữ tiêu cực như "thiếu thốn", "yếu kém". Thay vào đó, hãy dùng "kích hoạt", "khơi mở", "bù đắp năng lượng".
+      5. Cấu trúc bài viết mạch lạc, có mở đầu thu hút và kết thúc bằng một lời chúc phúc ý nghĩa cho hành trình của bé.
+    `;
+
+    // Generate content using the official SDK
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
     const storytelling =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Không thể tạo nội dung tư vấn lúc này.";
+      response.text() || "Cố vấn AI hiện đang bận, vui lòng thử lại sau.";
 
     return NextResponse.json({ storytelling });
-  } catch (error) {
-    console.error("Storytelling API Error:", error);
+  } catch (error: any) {
+    console.error("Gemini SDK Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 },
     );
   }

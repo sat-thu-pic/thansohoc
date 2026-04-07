@@ -50,19 +50,32 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
       return;
     }
 
-    const fatherLastRaw = cleanDisplayFull(formData.parentName);
-    const motherLastRaw = cleanDisplayFull(formData.motherLastName);
+    // Regex kiểm tra: Chỉ cho phép chữ cái (bao gồm tiếng Việt có dấu) và khoảng trắng
+    // Không cho phép số, ký tự đặc biệt, icon
+    const validNameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠƯưăâêôơưẠ-ỹ\s]+$/;
 
-    if (fatherLastRaw.length < 2 || motherLastRaw.length < 2) {
-      setError('Họ phải là chữ cái và có ít nhất 2 ký tự.');
+    if (!validNameRegex.test(formData.parentName.trim())) {
+      setError('Họ của Bố chứa ký tự không hợp lệ (số, icon hoặc ký tự đặc biệt).');
       return;
     }
 
-    // Gửi dữ liệu đã được làm sạch (không số, không ký tự lạ)
+    if (!validNameRegex.test(formData.motherLastName.trim())) {
+      setError('Họ của Mẹ chứa ký tự không hợp lệ (số, icon hoặc ký tự đặc biệt).');
+      return;
+    }
+
+    const fatherLast = formData.parentName.trim();
+    const motherLast = formData.motherLastName.trim();
+
+    if (fatherLast.length < 2 || motherLast.length < 2) {
+      setError('Họ phải có ít nhất 2 ký tự.');
+      return;
+    }
+
     onStart({ 
       ...formData, 
-      parentName: fatherLastRaw, 
-      motherLastName: motherLastRaw 
+      parentName: fatherLast, 
+      motherLastName: motherLast 
     });
   };
 

@@ -55,36 +55,41 @@ export default function Home() {
 
     // Hàm tạo danh sách gợi ý theo từng trường hợp họ
     const createSuggestions = (lastName: string, lastNameTitle: string, baseMask: number, type: string) => {
+      // currentBaseMask là TỔNG năng lượng bé CÓ SẴN từ (Ngày sinh + Họ đang xét)
       const currentBaseMask = birthDateMask | baseMask;
+      // currentMissingMask là những con số THỰC SỰ THIẾU từ tổng năng lượng trên
       const currentMissingMask = ~currentBaseMask & 511;
 
       return [...possibleCombinations]
-        .filter(comb => (comb.mask & currentMissingMask) !== 0) // Chỉ lấy tên bù được ít nhất 1 số thiếu
+        .filter(comb => (comb.mask & currentMissingMask) !== 0) // Lọc tên có mang ít nhất 1 số đang thiếu
         .sort((a, b) => {
+          // Năng lượng TỔNG CỘNG nếu chọn cái tên này = (Có Sẵn) | (Tên Đệm + Tên Chính)
           const aTotalMask = currentBaseMask | a.mask;
           const bTotalMask = currentBaseMask | b.mask;
           
-          // Ưu tiên 1: Đạt 511 (Cân bằng 100%)
+          // Ưu tiên 1: Đạt 511 (Cân bằng 100% CẢ BỘ TÊN)
           const aIsPerfect = aTotalMask === 511 ? 1 : 0;
           const bIsPerfect = bTotalMask === 511 ? 1 : 0;
           if (aIsPerfect !== bIsPerfect) return bIsPerfect - aIsPerfect;
 
-          // Ưu tiên 2: Số lượng số thiếu được bù đắp
+          // Ưu tiên 2: Lấp đầy được BAO NHIÊU SỐ THIẾU
+          // (Lấy những số tên đó cung cấp MÀ ĐANG NẰM TRONG phần số thiếu)
           const aContribution = (a.mask & currentMissingMask).toString(2).split('1').length - 1;
           const bContribution = (b.mask & currentMissingMask).toString(2).split('1').length - 1;
           if (aContribution !== bContribution) return bContribution - aContribution;
 
-          // Ưu tiên 3: Độ "sạch" (ít số dư thừa nhất)
+          // Ưu tiên 3: Tên nào "SẠCH" hơn (ít các số thừa mứa mà bé đã có sẵn)
           const aRedundancy = a.mask.toString(2).split('1').length - 1 - aContribution;
           const bRedundancy = b.mask.toString(2).split('1').length - 1 - bContribution;
           return aRedundancy - bRedundancy;
         })
         .slice(0, 10)
         .map(comb => ({
-          name: `${lastNameTitle} ${comb.name}`,
+          name: `${lastNameTitle} ${comb.name}`.trim(),
           gender: inputData.babyGender,
           mask: comb.mask,
           meaning: comb.meaning,
+          // Kiểm tra xem Năng lượng TỔNG CỘNG có đủ 1-9 (511) không
           isPerfect: (currentBaseMask | comb.mask) === 511,
           type: type
         }));

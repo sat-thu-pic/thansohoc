@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Sparkles, ArrowLeft, RefreshCw, XCircle } from 'lucide-react';
+import { Sparkles, ArrowLeft, RefreshCw, XCircle, MessageSquare } from 'lucide-react';
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
 import EnergyGrid from '@/components/visuals/EnergyGrid';
 import NameCard from '@/components/cards/NameCard';
 import { mapNameToNumbers, calculateLifePath } from '@/lib/numerology';
 import { generateBitmask, getMissingNumbers, filterBalancedNames, NameRecord } from '@/lib/bitmask';
-import namesDB from '@/data/names.json';
+import middleNames from '@/data/middleNames.json';
+import firstNames from '@/data/firstNames.json';
 
 export default function Home() {
   const [inputData, setInputData] = useState<FormData | null>(null);
@@ -22,22 +23,41 @@ export default function Home() {
     const lifePath = calculateLifePath(inputData.birthDate);
     const missingNumbers = getMissingNumbers(lastNameMask);
     
-    // Lọc các tên bù đắp đủ số thiếu (trong DB mẫu này có thể không có tên nào bù đắp HOÀN TOÀN)
-    // Để demo, chúng ta sẽ lọc các tên có chứa ít nhất 1 số thiếu nếu không tìm thấy tên hoàn hảo
-    let suggestedNames = filterBalancedNames(lastNameMask, namesDB as NameRecord[]);
+    // Tạo tổ hợp Tên đệm + Tên chính linh hoạt
+    const allPossibleNames: NameRecord[] = [];
     
-    // Dự phòng: nếu không có tên bù đắp 100%, lấy top các tên bù đắp được nhiều số thiếu nhất
+    middleNames.forEach(m => {
+      // Lọc giới tính cho tên đệm
+      if (m.gender !== 'neutral' && m.gender !== inputData.babyGender) return;
+      
+      firstNames.forEach(f => {
+        // Lọc giới tính cho tên chính
+        if (f.gender !== 'neutral' && f.gender !== inputData.babyGender) return;
+        
+        allPossibleNames.push({
+          name: `${m.name} ${f.name}`,
+          gender: inputData.babyGender,
+          mask: m.mask | f.mask,
+          meaning: `${m.meaning} kết hợp với ${f.meaning.toLowerCase()}.`
+        });
+      });
+    });
+
+    // Lọc các tên bù đắp đủ số thiếu
+    let suggestedNames = filterBalancedNames(lastNameMask, allPossibleNames);
+    
+    // Nếu không có tên cân bằng tuyệt đối, lấy các tên bù đắp được nhiều nhất
     if (suggestedNames.length === 0) {
-      suggestedNames = (namesDB as NameRecord[])
-        .filter(n => (n.gender === inputData.babyGender || n.gender === 'neutral'))
+      suggestedNames = allPossibleNames
         .sort((a, b) => {
           const aContribution = (a.mask & ~lastNameMask).toString(2).split('1').length - 1;
           const bContribution = (b.mask & ~lastNameMask).toString(2).split('1').length - 1;
           return bContribution - aContribution;
         })
-        .slice(0, 3);
+        .slice(0, 6);
     } else {
-      suggestedNames = suggestedNames.filter(n => n.gender === inputData.babyGender || n.gender === 'neutral');
+      // Nếu có quá nhiều tên cân bằng, chỉ lấy ngẫu nhiên hoặc top 10
+      suggestedNames = suggestedNames.slice(0, 10);
     }
 
     return {

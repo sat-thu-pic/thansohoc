@@ -1,72 +1,260 @@
 [
   {
-    "name": "An",
+    "name": "Minh Anh",
     "gender": "neutral",
-    "numbers": [1, 5],
-    "mask": 17,
-    "meaning": "Bình an, thư thái."
+    "mask": 409,
+    "meaning": "Sự kết hợp giữa trí tuệ sáng suốt và vẻ đẹp tinh khôi, mang năng lượng của sự thấu hiểu."
   },
   {
-    "name": "Bình",
-    "gender": "neutral",
-    "numbers": [2, 9, 5, 8],
-    "mask": 402,
-    "meaning": "Công bằng, yên định."
-  },
-  {
-    "name": "Cường",
+    "name": "Huy Hoàng",
     "gender": "boy",
-    "numbers": [3, 3, 6, 5, 7],
-    "mask": 116,
-    "meaning": "Mạnh mẽ, kiên cường."
+    "mask": 245,
+    "meaning": "Tương lai rạng rỡ, huy hoàng, mang rung động của sự thành công và tầm ảnh hưởng."
   },
   {
-    "name": "Dương",
-    "gender": "neutral",
-    "numbers": [4, 3, 6, 5, 7],
-    "mask": 124,
-    "meaning": "Ánh sáng mặt trời, rộng lớn."
-  },
-  {
-    "name": "Hải",
-    "gender": "neutral",
-    "numbers": [8, 1, 9],
-    "mask": 385,
-    "meaning": "Biển cả, bao dung."
-  },
-  {
-    "name": "Khánh",
-    "gender": "neutral",
-    "numbers": [2, 8, 1, 5, 8],
-    "mask": 147,
-    "meaning": "Vui vẻ, hạnh phúc."
-  },
-  {
-    "name": "Linh",
-    "gender": "neutral",
-    "numbers": [3, 9, 5, 8],
-    "mask": 404,
-    "meaning": "Linh hoạt, nhạy bén."
-  },
-  {
-    "name": "Minh",
-    "gender": "neutral",
-    "numbers": [4, 9, 5, 8],
-    "mask": 408,
-    "meaning": "Sáng suốt, minh mẫn."
-  },
-  {
-    "name": "Nam",
-    "gender": "boy",
-    "numbers": [5, 1, 4],
-    "mask": 25,
-    "meaning": "Phương nam, sự mạnh mẽ."
-  },
-  {
-    "name": "Thảo",
+    "name": "Thanh Thảo",
     "gender": "girl",
-    "numbers": [2, 8, 1, 6],
-    "mask": 163,
-    "meaning": "Cỏ cây, sự hiếu thảo."
+    "mask": 167,
+    "meaning": "Sự thanh khiết và lòng hiếu thảo, mang lại năng lượng nhẹ nhàng, bền bỉ."
+  },
+  {
+    "name": "Đức Bình",
+    "gender": "boy",
+    "mask": 414,
+    "meaning": "Sống có đạo đức và luôn giữ được sự bình tĩnh, cân bằng trong mọi hoàn cảnh."
+  },
+  {
+    "name": "Bảo Ngọc",
+    "gender": "girl",
+    "mask": 111,
+    "meaning": "Viên ngọc quý giá được trân trọng, mang năng lượng bảo vệ và tỏa sáng."
+  },
+  {
+    "name": "Tuấn Kiệt",
+    "gender": "boy",
+    "mask": 215,
+    "meaning": "Người tài giỏi xuất chúng, vừa có diện mạo vừa có trí tuệ vượt trội."
+  },
+  {
+    "name": "Kim Ngân",
+    "gender": "girl",
+    "mask": 51,
+    "meaning": "Vàng bạc, sự quý giá và sung túc, mang năng lượng của sự thịnh vượng."
+  },
+  {
+    "name": "Trọng Hiếu",
+    "gender": "boy",
+    "mask": 466,
+    "meaning": "Người coi trọng đạo hiếu, có nền tảng gia đình vững chắc và đáng tin cậy."
+  },
+  {
+    "name": "Thùy Chi",
+    "gender": "girl",
+    "mask": 405,
+    "meaning": "Dịu dàng như cành cây nhỏ, mang rung động của sự tinh tế và linh hoạt."
+  },
+  {
+    "name": "Quốc Bảo",
+    "gender": "boy",
+    "mask": 351,
+    "meaning": "Báu vật của quốc gia, mang năng lượng của trách nhiệm và sự tự hào."
+  },
+  {
+    "name": "Lan Hương",
+    "gender": "girl",
+    "mask": 413,
+    "meaning": "Hương thơm của hoa lan, dịu nhẹ nhưng đầy sức sống và sự quý phái."
+  },
+  {
+    "name": "Văn Nam",
+    "gender": "boy",
+    "mask": 61,
+    "meaning": "Người đàn ông có học thức, khiêm tốn và mạnh mẽ như phương Nam."
+  },
+  {
+    "name": "Thiên An",
+    "gender": "neutral",
+    "mask": 21,
+    "meaning": "Sự bình an từ trời ban, mang rung động của sự bảo hộ và thanh thản."
+  },
+  {
+    "name": "Hoàng Long",
+    "gender": "boy",
+    "mask": 125,
+    "meaning": "Con rồng vàng, biểu tượng của sức mạnh, quyền uy và tầm vóc lớn lao."
+  },
+  {
+    "name": "Diệp Chi",
+    "gender": "girl",
+    "mask": 412,
+    "meaning": "Lá xanh trên cành, mang năng lượng của sự sinh sôi và hy vọng."
+  },
+  {
+    "name": "Gia Bảo",
+    "gender": "boy",
+    "mask": 355,
+    "meaning": "Báu vật của gia đình, mang năng lượng của sự bảo bọc và truyền thống."
+  },
+  {
+    "name": "Minh Châu",
+    "gender": "neutral",
+    "mask": 413,
+    "meaning": "Viên ngọc sáng, biểu tượng của sự quý giá và trí tuệ minh mẫn."
+  },
+  {
+    "name": "Khánh An",
+    "gender": "neutral",
+    "mask": 147,
+    "meaning": "Niềm vui và sự bình an, mang lại năng lượng tích cực và thư thái."
+  },
+  {
+    "name": "Tuệ Lâm",
+    "gender": "neutral",
+    "mask": 31,
+    "meaning": "Trí tuệ sâu sắc như rừng xanh, mang năng lượng của sự ổn định và minh triết."
+  },
+  {
+    "name": "Nhật Minh",
+    "gender": "boy",
+    "mask": 411,
+    "meaning": "Ánh sáng mặt trời rực rỡ, mang năng lượng của sự khai sáng và dẫn đầu."
+  },
+  {
+    "name": "Hải Đăng",
+    "gender": "boy",
+    "mask": 473,
+    "meaning": "Ngọn đèn biển, biểu tượng của sự định hướng và niềm hy vọng trong đêm tối."
+  },
+  {
+    "name": "Bảo Anh",
+    "gender": "neutral",
+    "mask": 179,
+    "meaning": "Báu vật tinh khôi, mang năng lượng của sự quý phái và thông minh."
+  },
+  {
+    "name": "Quỳnh Chi",
+    "gender": "girl",
+    "mask": 468,
+    "meaning": "Cành hoa quỳnh tinh tế, mang rung động của vẻ đẹp bí ẩn và duyên dáng."
+  },
+  {
+    "name": "Mai Phương",
+    "gender": "girl",
+    "mask": 509,
+    "meaning": "Hương thơm của hoa mai, mang năng lượng của sự may mắn và bền bỉ."
+  },
+  {
+    "name": "Trường An",
+    "gender": "boy",
+    "mask": 375,
+    "meaning": "Sự bình an lâu bền, mang năng lượng của sự vững chãi và trường tồn."
+  },
+  {
+    "name": "Linh Đan",
+    "gender": "girl",
+    "mask": 413,
+    "meaning": "Viên thuốc quý, mang năng lượng chữa lành và sự quý giá vô ngần."
+  },
+  {
+    "name": "Khôi Nguyên",
+    "gender": "boy",
+    "mask": 502,
+    "meaning": "Sự tinh khôi và vẹn nguyên, mang năng lượng của khởi đầu mới tốt đẹp."
+  },
+  {
+    "name": "Ngọc Diệp",
+    "gender": "girl",
+    "mask": 380,
+    "meaning": "Lá ngọc cành vàng, biểu tượng của sự cao quý và thanh tao."
+  },
+  {
+    "name": "Minh Triết",
+    "gender": "boy",
+    "mask": 410,
+    "meaning": "Trí tuệ sáng suốt, sâu rộng, mang năng lượng của sự hiểu biết sâu sắc."
+  },
+  {
+    "name": "Phương Thảo",
+    "gender": "girl",
+    "mask": 247,
+    "meaning": "Hương cỏ thơm, mang lại cảm giác dễ chịu và tràn đầy sức sống."
+  },
+  {
+    "name": "Phúc Lâm",
+    "gender": "boy",
+    "mask": 205,
+    "meaning": "Phước đức dồi dào như rừng cây, mang năng lượng bảo hộ cho dòng tộc."
+  },
+  {
+    "name": "Vĩnh Hưng",
+    "gender": "boy",
+    "mask": 476,
+    "meaning": "Sự thịnh vượng vĩnh cửu, mang năng lượng của sự phát triển không ngừng."
+  },
+  {
+    "name": "Thanh Hà",
+    "gender": "neutral",
+    "mask": 147,
+    "meaning": "Dòng sông xanh thanh bình, mang năng lượng của sự trôi chảy và dịu mát."
+  },
+  {
+    "name": "Khôi Vĩ",
+    "gender": "boy",
+    "mask": 426,
+    "meaning": "Sự mạnh mẽ và tầm vóc lớn lao, mang năng lượng của người dẫn dắt."
+  },
+  {
+    "name": "Hải Yến",
+    "gender": "girl",
+    "mask": 465,
+    "meaning": "Chim yến trên biển, biểu tượng của sự kiên trì và tin vui."
+  },
+  {
+    "name": "Cát Tường",
+    "gender": "neutral",
+    "mask": 119,
+    "meaning": "Sự may mắn và tốt lành, mang năng lượng của phước báo."
+  },
+  {
+    "name": "Minh Khang",
+    "gender": "boy",
+    "mask": 475,
+    "meaning": "Sự thông minh và an khang, mang năng lượng của sức khỏe và trí tuệ."
+  },
+  {
+    "name": "Thảo Nguyên",
+    "gender": "girl",
+    "mask": 247,
+    "meaning": "Đồng cỏ rộng lớn, mang năng lượng của tự do và sự sinh sôi."
+  },
+  {
+    "name": "Gia Hưng",
+    "gender": "boy",
+    "mask": 469,
+    "meaning": "Làm hưng thịnh gia đình, dòng tộc, mang năng lượng của sự phát triển."
+  },
+  {
+    "name": "Hoài An",
+    "gender": "neutral",
+    "mask": 433,
+    "meaning": "Luôn luôn bình an, mang rung động của sự ổn định tâm trí."
+  },
+  {
+    "name": "Kiều Anh",
+    "gender": "girl",
+    "mask": 407,
+    "meaning": "Vẻ đẹp duyên dáng và thông minh, mang năng lượng của sự lôi cuốn."
+  },
+  {
+    "name": "Thành Đạt",
+    "gender": "boy",
+    "mask": 155,
+    "meaning": "Sự thành công và đạt được mục tiêu, mang năng lượng của hành động."
+  },
+  {
+    "name": "Tường Vi",
+    "gender": "girl",
+    "mask": 126,
+    "meaning": "Đóa hoa tường vy rực rỡ, mang năng lượng của niềm vui và tình yêu."
   }
 ]

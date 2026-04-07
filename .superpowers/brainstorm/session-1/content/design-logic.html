@@ -1,0 +1,40 @@
+<div class="section">
+  <h3>Phần 2: Logic tính toán & Quy trình dữ liệu (Logic & Data Flow)</h3>
+  <p>Đây là trái tim của hệ thống: Cách chúng ta chuyển đổi Họ sang số và tìm tên "Cân bằng tuyệt đối".</p>
+
+  <div class="mockup">
+    <div class="mockup-header">Quy trình xử lý (Data Flow)</div>
+    <div class="mockup-body">
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="card" style="border-left: 5px solid var(--primary);">
+          <h4>Bước 1: Nhập Họ & Chuyển đổi (A-Z)</h4>
+          <p>Ví dụ: H-O-A-N-G -> 8-6-1-5-7</p>
+          <p class="subtitle">Loại bỏ dấu, ánh xạ theo bảng Pytago chuẩn.</p>
+        </div>
+        <div style="text-align: center; font-size: 20px;">⬇️</div>
+        <div class="card" style="border-left: 5px solid var(--primary);">
+          <h4>Bước 2: Xác định "Số thiếu" (Missing Numbers)</h4>
+          <p>Trong tập hợp {1-9}, các số không xuất hiện trong Họ sẽ là số thiếu.</p>
+          <p class="subtitle">Ví dụ: Thiếu {2, 3, 4, 9}</p>
+        </div>
+        <div style="text-align: center; font-size: 20px;">⬇️</div>
+        <div class="card" style="border-left: 5px solid var(--primary);">
+          <h4>Bước 3: Truy vấn & Lọc Tên (Search & Filter)</h4>
+          <p>Tìm trong Name DB các tên (hoặc bộ Tên Đệm + Tên Chính) có chứa <b>tất cả</b> các số thiếu {2, 3, 4, 9}.</p>
+        </div>
+        <div style="text-align: center; font-size: 20px;">⬇️</div>
+        <div class="card" style="border-left: 5px solid var(--accent);">
+          <h4>Bước 4: Storytelling AI</h4>
+          <p>Gửi tên đã chọn sang AI -> Tạo nội dung: "Tên [Tên] giúp bù đắp năng lượng [Số thiếu], mang lại sự cân bằng..."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h4>Thuật toán tối ưu (Bitmasking)</h4>
+    <p>Để tìm kiếm nhanh trong hàng nghìn tên, mỗi tên sẽ được gán một "Mặt nạ bit" (Bitmask) đại diện cho các con số nó chứa. Việc so khớp chỉ mất 1 phép toán logic <code>AND</code>/<code>OR</code>.</p>
+  </div>
+</div>
+
+<p>Logic này đảm bảo tính toán tức thì ngay cả khi dữ liệu tên lớn. Bạn có thấy quy trình này hợp lý không? Tiếp theo tôi sẽ trình bày <b>Thiết kế Giao diện (UI/UX)</b>.</p>

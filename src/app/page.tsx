@@ -15,7 +15,7 @@ export default function Home() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [storytelling, setStorytelling] = useState<string | null>(null);
   const [isAIHeading, setIsAIHeading] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'father' | 'mother'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'father' | 'mother' | 'combined'>('all');
 
   const analysis = useMemo(() => {
     if (!inputData) return null;
@@ -26,13 +26,13 @@ export default function Home() {
 
     const fatherLast = inputData.parentName.trim();
     const motherLast = inputData.motherLastName.trim();
-
-    // Tính toán số thiếu dựa trên tổng năng lượng của cả 2 họ (dùng bản không dấu để tính)
-    const combinedLastName = `${fatherLast} ${motherLast}`;
-    const lastNameNumbers = mapNameToNumbers(combinedLastName);
-    const lastNameMask = generateBitmask(lastNameNumbers);
     const lifePath = calculateLifePath(inputData.birthDate);
-    const missingNumbers = getMissingNumbers(lastNameMask);
+
+    // Tính toán cho trường hợp KẾT HỢP cả 2 họ
+    const combinedLastName = `${fatherLast} ${motherLast}`;
+    const combinedLastNumbers = mapNameToNumbers(combinedLastName);
+    const combinedLastMask = generateBitmask(combinedLastNumbers);
+    const missingNumbers = getMissingNumbers(combinedLastMask);
 
     // Tạo tổ hợp Tên đệm + Tên chính linh hoạt
     const fatherLastTitle = toTitleCase(fatherLast);
@@ -53,7 +53,7 @@ export default function Home() {
       });
     });
 
-    // Tính toán cho trường hợp bé mang Họ Bố
+    // 1. Danh sách bé mang Họ Bố
     const fatherLastNumbers = mapNameToNumbers(fatherLast);
     const fatherLastMask = generateBitmask(fatherLastNumbers);
     const fatherSuggested = [...possibleCombinations]
@@ -62,7 +62,7 @@ export default function Home() {
         const bContribution = (b.mask & ~fatherLastMask).toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
-      .slice(0, 10)
+      .slice(0, 8)
       .map(comb => ({
         name: `${fatherLastTitle} ${comb.name}`,
         gender: inputData.babyGender,
@@ -71,7 +71,7 @@ export default function Home() {
         type: 'father'
       }));
 
-    // Tính toán cho trường hợp bé mang Họ Mẹ
+    // 2. Danh sách bé mang Họ Mẹ
     const motherLastNumbers = mapNameToNumbers(motherLast);
     const motherLastMask = generateBitmask(motherLastNumbers);
     const motherSuggested = [...possibleCombinations]
@@ -80,7 +80,7 @@ export default function Home() {
         const bContribution = (b.mask & ~motherLastMask).toString(2).split('1').length - 1;
         return bContribution - aContribution;
       })
-      .slice(0, 10)
+      .slice(0, 8)
       .map(comb => ({
         name: `${motherLastTitle} ${comb.name}`,
         gender: inputData.babyGender,
@@ -89,13 +89,30 @@ export default function Home() {
         type: 'mother'
       }));
 
-    // Gộp cả 2 danh sách lại
-    const allNames = [...fatherSuggested, ...motherSuggested];
+    // 3. Danh sách bé mang Họ KẾT HỢP (Bố + Mẹ)
+    const combinedSuggested = [...possibleCombinations]
+      .sort((a, b) => {
+        const aContribution = (a.mask & ~combinedLastMask).toString(2).split('1').length - 1;
+        const bContribution = (b.mask & ~combinedLastMask).toString(2).split('1').length - 1;
+        return bContribution - aContribution;
+      })
+      .slice(0, 8)
+      .map(comb => ({
+        name: `${fatherLastTitle} ${motherLastTitle} ${comb.name}`,
+        gender: inputData.babyGender,
+        mask: comb.mask,
+        meaning: comb.meaning,
+        type: 'combined'
+      }));
+
+    // Gộp tất cả danh sách lại
+    const allNames = [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
     return {
-      lastNameMask: fatherLastMask | motherLastMask,
+      lastNameMask: combinedLastMask,
       fatherMask: fatherLastMask,
       motherMask: motherLastMask,
+      combinedMask: combinedLastMask,
       lifePath,
       missingNumbers,
       allNames,
@@ -106,7 +123,7 @@ export default function Home() {
 
   const currentMask = useMemo(() => {
     if (!analysis) return 0;
-    if (filterType === 'all') return analysis.lastNameMask;
+    if (filterType === 'all' || filterType === 'combined') return analysis.combinedMask;
     if (filterType === 'father') return analysis.fatherMask;
     return analysis.motherMask;
   }, [analysis, filterType]);
@@ -237,6 +254,14 @@ export default function Home() {
                   }`}
                 >
                   HỌ MẸ ({analysis.motherLast})
+                </button>
+                <button
+                  onClick={() => setFilterType('combined')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  KẾT HỢP ({analysis.fatherLast} {analysis.motherLast})
                 </button>
               </div>
             </div>

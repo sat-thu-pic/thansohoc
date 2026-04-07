@@ -106,7 +106,9 @@ export default function Home() {
       }));
 
     // Gộp tất cả danh sách lại
-    const allNames = [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
+    const allNames = fatherLastTitle === motherLastTitle 
+      ? [...fatherSuggested] // Nếu họ giống nhau, chỉ lấy danh sách họ bố (đã bao gồm họ mẹ)
+      : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
     return {
       lastNameMask: combinedLastMask,
@@ -117,7 +119,8 @@ export default function Home() {
       missingNumbers,
       allNames,
       fatherLast: fatherLastTitle,
-      motherLast: motherLastTitle
+      motherLast: motherLastTitle,
+      isSameLast: fatherLastTitle === motherLastTitle
     };
   }, [inputData]);
 
@@ -247,22 +250,26 @@ export default function Home() {
                 >
                   HỌ BỐ ({analysis?.fatherLast})
                 </button>
-                <button
-                  onClick={() => setFilterType('mother')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                  }`}
-                >
-                  HỌ MẸ ({analysis?.motherLast})
-                </button>
-                <button
-                  onClick={() => setFilterType('combined')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                  }`}
-                >
-                  KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
-                </button>
+                {!analysis?.isSameLast && (
+                  <>
+                    <button
+                      onClick={() => setFilterType('mother')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                        filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                      }`}
+                    >
+                      HỌ MẸ ({analysis?.motherLast})
+                    </button>
+                    <button
+                      onClick={() => setFilterType('combined')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                        filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                      }`}
+                    >
+                      KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             

@@ -312,9 +312,6 @@ export default function Home() {
                 <h2 className="text-3xl font-black uppercase tracking-tight text-advisor-900">
                   Gợi ý tên cân bằng
                 </h2>
-                <p className="text-sm italic text-advisor-500">
-                  Chọn một tên để xem phần diễn giải từ AI
-                </p>
               </div>
 
               <div className="flex rounded-xl border border-advisor-100 bg-white p-1 shadow-sm">

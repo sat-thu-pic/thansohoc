@@ -1,0 +1,72 @@
+[
+  {
+    "name": "An",
+    "gender": "neutral",
+    "numbers": [1, 5],
+    "mask": 17,
+    "meaning": "Bình an, thư thái."
+  },
+  {
+    "name": "Bình",
+    "gender": "neutral",
+    "numbers": [2, 9, 5, 8],
+    "mask": 402,
+    "meaning": "Công bằng, yên định."
+  },
+  {
+    "name": "Cường",
+    "gender": "boy",
+    "numbers": [3, 3, 6, 5, 7],
+    "mask": 116,
+    "meaning": "Mạnh mẽ, kiên cường."
+  },
+  {
+    "name": "Dương",
+    "gender": "neutral",
+    "numbers": [4, 3, 6, 5, 7],
+    "mask": 124,
+    "meaning": "Ánh sáng mặt trời, rộng lớn."
+  },
+  {
+    "name": "Hải",
+    "gender": "neutral",
+    "numbers": [8, 1, 9],
+    "mask": 385,
+    "meaning": "Biển cả, bao dung."
+  },
+  {
+    "name": "Khánh",
+    "gender": "neutral",
+    "numbers": [2, 8, 1, 5, 8],
+    "mask": 147,
+    "meaning": "Vui vẻ, hạnh phúc."
+  },
+  {
+    "name": "Linh",
+    "gender": "neutral",
+    "numbers": [3, 9, 5, 8],
+    "mask": 404,
+    "meaning": "Linh hoạt, nhạy bén."
+  },
+  {
+    "name": "Minh",
+    "gender": "neutral",
+    "numbers": [4, 9, 5, 8],
+    "mask": 408,
+    "meaning": "Sáng suốt, minh mẫn."
+  },
+  {
+    "name": "Nam",
+    "gender": "boy",
+    "numbers": [5, 1, 4],
+    "mask": 25,
+    "meaning": "Phương nam, sự mạnh mẽ."
+  },
+  {
+    "name": "Thảo",
+    "gender": "girl",
+    "numbers": [2, 8, 1, 6],
+    "mask": 163,
+    "meaning": "Cỏ cây, sự hiếu thảo."
+  }
+]

@@ -32,3 +32,18 @@ export function getMissingNumbers(mask: number): number[] {
 export function isPerfectlyBalanced(lastNameMask: number, nameMask: number): boolean {
   return (lastNameMask | nameMask) === 511;
 }
+
+export interface NameRecord {
+  name: string;
+  gender: string;
+  mask: number;
+  meaning: string;
+}
+
+/**
+ * Lọc danh sách tên giúp bù đắp CÀNG NHIỀU CÀNG TỐT hoặc HOÀN TOÀN các số thiếu.
+ * Ở phiên bản này, chúng ta ưu tiên tìm các tên bù đắp HOÀN TOÀN (Cân bằng tuyệt đối).
+ */
+export function filterBalancedNames(lastNameMask: number, names: NameRecord[]): NameRecord[] {
+  return names.filter((name) => isPerfectlyBalanced(lastNameMask, name.mask));
+}

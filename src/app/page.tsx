@@ -1,164 +1,199 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Sparkles, ArrowLeft, RefreshCw, XCircle, MessageSquare, CheckCircle2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowLeft, MessageSquare, RefreshCw, Sparkles, XCircle } from 'lucide-react';
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
-import EnergyGrid from '@/components/visuals/EnergyGrid';
 import NameCard from '@/components/cards/NameCard';
-import { mapNameToNumbers, calculateLifePath, getDateDigits } from '@/lib/numerology';
-import { generateBitmask, getMissingNumbers, filterBalancedNames, NameRecord } from '@/lib/bitmask';
-import middleNames from '@/data/middleNames.json';
+import EnergyGrid from '@/components/visuals/EnergyGrid';
 import firstNames from '@/data/firstNames.json';
+import middleNames from '@/data/middleNames.json';
+import { generateBitmask, getMissingNumbers } from '@/lib/bitmask';
+import { calculateLifePath, getDateDigits, mapNameToNumbers } from '@/lib/numerology';
+
+const FULL_MASK = 511;
+
+type FilterType = 'suggested' | 'father' | 'mother' | 'combined';
+
+type SuggestedName = {
+  name: string;
+  meaning: string;
+  mask: number;
+  type: Exclude<FilterType, 'suggested'>;
+};
+
+type NameCombination = {
+  firstName: string;
+  middleName: string;
+  name: string;
+  mask: number;
+  meaning: string;
+};
 
 export default function Home() {
   const [inputData, setInputData] = useState<FormData | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [storytelling, setStorytelling] = useState<string | null>(null);
   const [isAIHeading, setIsAIHeading] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'father' | 'mother' | 'combined'>('all');
+  const [filterType, setFilterType] = useState<FilterType>('suggested');
 
   const analysis = useMemo(() => {
     if (!inputData) return null;
 
-    const toTitleCase = (str: string) => {
-      return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    };
+    const toTitleCase = (value: string) =>
+      value
+        .toLowerCase()
+        .split(' ')
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+    const normalizePart = (value: string) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+
+    const countBits = (mask: number) => mask.toString(2).split('1').length - 1;
 
     const fatherLast = inputData.parentName.trim();
     const motherLast = inputData.motherLastName.trim();
-    const lifePath = calculateLifePath(inputData.birthDate);
-
-    // NỀN TẢNG GỐC: Các con số trong Ngày sinh
-    const birthDateNumbers = getDateDigits(inputData.birthDate);
-    const birthDateMask = generateBitmask(birthDateNumbers);
-    
-    const missingNumbers = getMissingNumbers(birthDateMask);
-
     const fatherLastTitle = toTitleCase(fatherLast);
     const motherLastTitle = toTitleCase(motherLast);
-    
-    const possibleCombinations: { name: string, mask: number, meaning: string }[] = [];
-    middleNames.forEach(m => {
-      if (m.gender !== 'neutral' && m.gender !== inputData.babyGender) return;
-      firstNames.forEach(f => {
-        if (f.gender !== 'neutral' && f.gender !== inputData.babyGender) return;
-        possibleCombinations.push({
-          name: `${m.name} ${f.name}`,
-          mask: m.mask | f.mask,
-          meaning: `${m.meaning} kết hợp với ${f.meaning.toLowerCase()}.`
-        });
-      });
-    });
+
+    const lifePath = calculateLifePath(inputData.birthDate);
+    const birthDateMask = generateBitmask(getDateDigits(inputData.birthDate));
+    const missingNumbers = getMissingNumbers(birthDateMask);
 
     const fatherLastMask = generateBitmask(mapNameToNumbers(fatherLast));
     const motherLastMask = generateBitmask(mapNameToNumbers(motherLast));
 
-    // Hàm tạo danh sách gợi ý theo từng trường hợp họ
-    const createSuggestions = (lastName: string, lastNameTitle: string, baseMask: number, type: string) => {
-      // currentBaseMask là TỔNG năng lượng bé CÓ SẴN từ (Ngày sinh + Họ đang xét)
-      const currentBaseMask = birthDateMask | baseMask;
-      // currentMissingMask là những con số THỰC SỰ THIẾU từ tổng năng lượng trên
-      const currentMissingMask = ~currentBaseMask & 511;
+    const possibleCombinations: NameCombination[] = [];
+    middleNames.forEach((middle) => {
+      if (middle.gender !== 'neutral' && middle.gender !== inputData.babyGender) return;
 
-      return [...possibleCombinations]
-        .filter(comb => (comb.mask & currentMissingMask) !== 0) // Lọc tên có mang ít nhất 1 số đang thiếu
+      firstNames.forEach((first) => {
+        if (first.gender !== 'neutral' && first.gender !== inputData.babyGender) return;
+
+        possibleCombinations.push({
+          firstName: first.name.trim(),
+          middleName: middle.name.trim(),
+          name: `${middle.name} ${first.name}`.trim(),
+          mask: middle.mask | first.mask,
+          meaning: `${middle.meaning} kết hợp với ${first.meaning.toLowerCase()}.`,
+        });
+      });
+    });
+
+    const createSuggestions = (
+      prefix: string,
+      surnameMask: number,
+      type: Exclude<FilterType, 'suggested'>
+    ): SuggestedName[] => {
+      const baseMask = birthDateMask | surnameMask;
+      const missingMask = FULL_MASK ^ baseMask;
+      const surnameParts = prefix.split(' ').map(normalizePart).filter(Boolean);
+
+      return possibleCombinations
+        .filter((combination) => {
+          const normalizedMiddle = normalizePart(combination.middleName);
+          const normalizedFirst = normalizePart(combination.firstName);
+
+          if (normalizedMiddle === normalizedFirst) {
+            return false;
+          }
+
+          if (surnameParts.includes(normalizedMiddle) || surnameParts.includes(normalizedFirst)) {
+            return false;
+          }
+
+          return true;
+        })
+        .filter((combination) => (baseMask | combination.mask) === FULL_MASK)
         .sort((a, b) => {
-          // Năng lượng TỔNG CỘNG nếu chọn cái tên này = (Có Sẵn) | (Tên Đệm + Tên Chính)
-          const aTotalMask = currentBaseMask | a.mask;
-          const bTotalMask = currentBaseMask | b.mask;
-          
-          // Ưu tiên 1: Đạt 511 (Cân bằng 100% CẢ BỘ TÊN)
-          const aIsPerfect = aTotalMask === 511 ? 1 : 0;
-          const bIsPerfect = bTotalMask === 511 ? 1 : 0;
-          if (aIsPerfect !== bIsPerfect) return bIsPerfect - aIsPerfect;
+          const aCoverage = countBits(a.mask & missingMask);
+          const bCoverage = countBits(b.mask & missingMask);
+          if (aCoverage !== bCoverage) return bCoverage - aCoverage;
 
-          // Ưu tiên 2: Lấp đầy được BAO NHIÊU SỐ THIẾU
-          // (Lấy những số tên đó cung cấp MÀ ĐANG NẰM TRONG phần số thiếu)
-          const aContribution = (a.mask & currentMissingMask).toString(2).split('1').length - 1;
-          const bContribution = (b.mask & currentMissingMask).toString(2).split('1').length - 1;
-          if (aContribution !== bContribution) return bContribution - aContribution;
+          const aRedundancy = countBits(a.mask) - aCoverage;
+          const bRedundancy = countBits(b.mask) - bCoverage;
+          if (aRedundancy !== bRedundancy) return aRedundancy - bRedundancy;
 
-          // Ưu tiên 3: Tên nào "SẠCH" hơn (ít các số thừa mứa mà bé đã có sẵn)
-          const aRedundancy = a.mask.toString(2).split('1').length - 1 - aContribution;
-          const bRedundancy = b.mask.toString(2).split('1').length - 1 - bContribution;
-          return aRedundancy - bRedundancy;
+          return a.name.localeCompare(b.name, 'vi');
         })
         .slice(0, 10)
-        .map(comb => ({
-          name: `${lastNameTitle} ${comb.name}`.trim(),
-          gender: inputData.babyGender,
-          mask: comb.mask,
-          meaning: comb.meaning,
-          // Kiểm tra xem Năng lượng TỔNG CỘNG có đủ 1-9 (511) không
-          isPerfect: (currentBaseMask | comb.mask) === 511,
-          type: type
+        .map((combination) => ({
+          name: `${prefix} ${combination.name}`.trim(),
+          meaning: combination.meaning,
+          mask: surnameMask | combination.mask,
+          type,
         }));
     };
 
-    const fatherSuggested = createSuggestions(fatherLast, fatherLastTitle, fatherLastMask, 'father');
-    const motherSuggested = createSuggestions(motherLast, motherLastTitle, motherLastMask, 'mother');
-    
-    // Đối với KẾT HỢP
-    const combinedLastMask = fatherLastMask | motherLastMask;
-    const combinedSuggested = createSuggestions('', `${fatherLastTitle} ${motherLastTitle}`, combinedLastMask, 'combined');
+    const fatherSuggested = createSuggestions(fatherLastTitle, fatherLastMask, 'father');
+    const motherSuggested = createSuggestions(motherLastTitle, motherLastMask, 'mother');
+    const combinedSuggested = createSuggestions(
+      `${fatherLastTitle} ${motherLastTitle}`.trim(),
+      fatherLastMask | motherLastMask,
+      'combined'
+    );
 
-    const allNames = fatherLastTitle === motherLastTitle 
-      ? [...fatherSuggested] 
-      : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
+    const allNames =
+      fatherLastTitle === motherLastTitle
+        ? fatherSuggested
+        : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
     return {
-      lastNameMask: birthDateMask,
-      fatherMask: birthDateMask | fatherLastMask,
-      motherMask: birthDateMask | motherLastMask,
-      combinedMask: birthDateMask | fatherLastMask | motherLastMask,
+      allNames,
+      birthDateMask,
+      fatherLast: fatherLastTitle,
+      isSameLast: fatherLastTitle === motherLastTitle,
       lifePath,
       missingNumbers,
-      allNames,
-      fatherLast: fatherLastTitle,
       motherLast: motherLastTitle,
-      isSameLast: fatherLastTitle === motherLastTitle
     };
   }, [inputData]);
 
   const currentMask = useMemo(() => {
     if (!analysis) return 0;
-    return analysis.lastNameMask; 
+    return analysis.birthDateMask;
   }, [analysis]);
-
-  const currentMissingNumbers = useMemo(() => {
-    return getMissingNumbers(currentMask);
-  }, [currentMask]);
 
   const filteredNames = useMemo(() => {
     if (!analysis) return [];
-    if (filterType === 'all') return analysis.allNames;
-    return analysis.allNames.filter(n => (n as any).type === filterType);
+    if (filterType === 'suggested') {
+      return analysis.allNames.length > 0 ? [analysis.allNames[0]] : [];
+    }
+    return analysis.allNames.filter((name) => name.type === filterType);
   }, [analysis, filterType]);
 
   const handleStart = (data: FormData) => {
     setInputData(data);
     setStorytelling(null);
     setSelectedName(null);
-    setFilterType('all');
+    setFilterType('suggested');
   };
 
   const handleFetchStorytelling = async (name: string) => {
     if (!inputData || !analysis) return;
+
     setIsAIHeading(true);
     setSelectedName(name);
+
     try {
-      const res = await fetch('/api/storytelling', {
+      const response = await fetch('/api/storytelling', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lastName: inputData.lastName,
-          name: name,
+          name,
           birthDate: inputData.birthDate,
           lifePath: analysis.lifePath,
-          missingNumbers: analysis.missingNumbers
+          missingNumbers: analysis.missingNumbers,
         }),
       });
-      const data = await res.json();
+
+      const data = await response.json();
       setStorytelling(data.storytelling);
     } catch (error) {
       console.error(error);
@@ -170,14 +205,14 @@ export default function Home() {
 
   if (!inputData) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-advisor-50 to-white">
-        <div className="flex flex-col items-center gap-6 mb-12 text-center">
-          <div className="bg-advisor-600 p-4 rounded-3xl text-white shadow-xl shadow-advisor-200">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-advisor-50 to-white p-6">
+        <div className="mb-12 flex flex-col items-center gap-6 text-center">
+          <div className="rounded-3xl bg-advisor-600 p-4 text-white shadow-xl shadow-advisor-200">
             <Sparkles size={48} />
           </div>
-          <h1 className="text-5xl font-black text-advisor-900 tracking-tight">Naming Advisor</h1>
-          <p className="text-xl text-advisor-700 max-w-xl">
-            Cố vấn Thần số học chuyên sâu giúp cha mẹ tìm thấy cái tên cân bằng tuyệt đối cho bé.
+          <h1 className="text-5xl font-black tracking-tight text-advisor-900">Naming Advisor</h1>
+          <p className="max-w-xl text-xl text-advisor-700">
+            Công cụ gợi ý tên cân bằng thần số học cho bé dựa trên ngày sinh và họ của bố mẹ.
           </p>
         </div>
         <AdvisorForm onStart={handleStart} />
@@ -185,87 +220,95 @@ export default function Home() {
     );
   }
 
+  if (!analysis) {
+    return null;
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center p-6 bg-slate-50">
+    <main className="flex min-h-screen flex-col items-center bg-slate-50 p-6">
       <div className="w-full max-w-5xl">
-        <button 
+        <button
           onClick={() => setInputData(null)}
-          className="mb-8 flex items-center gap-2 text-advisor-600 font-bold hover:text-advisor-800 transition-all"
+          className="mb-8 flex items-center gap-2 font-bold text-advisor-600 transition-all hover:text-advisor-800"
         >
-          <ArrowLeft size={20} /> QUAY LẠI
+          <ArrowLeft size={20} /> Quay lại
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="flex flex-col gap-8">
-            <EnergyGrid mask={currentMask} lifePath={analysis!.lifePath} />
-            <div className="bg-white p-6 rounded-2xl border border-advisor-100 shadow-lg">
-              <h4 className="font-bold text-advisor-900 mb-4 flex items-center gap-2">
-                <RefreshCw size={18} className="text-advisor-500" /> Phân tích số thiếu
+            <EnergyGrid mask={currentMask} lifePath={analysis.lifePath} />
+            <div className="rounded-2xl border border-advisor-100 bg-white p-6 shadow-lg">
+              <h4 className="mb-4 flex items-center gap-2 font-bold text-advisor-900">
+                <RefreshCw size={18} className="text-advisor-500" /> Số thiếu theo ngày sinh
               </h4>
               <div className="flex flex-wrap gap-2">
-                {currentMissingNumbers.map(n => (
-                  <span key={n} className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full font-bold text-sm border border-rose-100">
-                    Số {n}
+                {analysis.missingNumbers.map((number) => (
+                  <span
+                    key={number}
+                    className="rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-sm font-bold text-rose-600"
+                  >
+                    Số {number}
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-sm text-slate-500 leading-relaxed italic">
-                Đây là các năng lượng bé còn thiếu từ nền tảng Ngày sinh. Những cái tên dưới đây được gợi ý để bù đắp và kích hoạt sự cân bằng 1-9 cho hành trình của bé.
+              <p className="mt-4 text-sm italic leading-relaxed text-slate-500">
+                Các tên dưới đây chỉ được giữ lại khi ghép với ngày sinh và họ tương ứng tạo thành
+                bộ mask đủ từ 1 đến 9.
               </p>
             </div>
           </div>
 
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+          <div className="flex flex-col gap-6 lg:col-span-2">
+            <div className="mb-2 flex flex-col justify-between gap-4 md:flex-row md:items-end">
               <div>
-                <h2 className="text-3xl font-black text-advisor-900 uppercase tracking-tight">
+                <h2 className="text-3xl font-black uppercase tracking-tight text-advisor-900">
                   Gợi ý tên cân bằng
                 </h2>
-                <p className="text-advisor-500 text-sm italic">Nhấn vào thẻ tên để xem Storytelling từ AI</p>
+                <p className="text-sm italic text-advisor-500">
+                  Chọn một tên để xem phần diễn giải từ AI
+                </p>
               </div>
-              
-              {!analysis?.isSameLast && (
-                <div className="flex bg-white p-1 rounded-xl border border-advisor-100 shadow-sm">
+
+              {!analysis.isSameLast && (
+                <div className="flex rounded-xl border border-advisor-100 bg-white p-1 shadow-sm">
                   <button
-                    onClick={() => setFilterType('all')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                      filterType === 'all' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    onClick={() => setFilterType('suggested')}
+                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                      filterType === 'suggested'
+                        ? 'bg-advisor-600 text-white shadow-md'
+                        : 'text-advisor-400 hover:text-advisor-600'
                     }`}
                   >
-                    TẤT CẢ
+                    Gợi ý
                   </button>
                   <button
                     onClick={() => setFilterType('father')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                      filterType === 'father' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                      filterType === 'father'
+                        ? 'bg-advisor-600 text-white shadow-md'
+                        : 'text-advisor-400 hover:text-advisor-600'
                     }`}
                   >
-                    HỌ BỐ ({analysis?.fatherLast})
-                  </button>
-                  <button
-                    onClick={() => setFilterType('mother')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                      filterType === 'mother' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
-                    }`}
-                  >
-                    HỌ MẸ ({analysis?.motherLast})
+                    Họ bố ({analysis.fatherLast})
                   </button>
                   <button
                     onClick={() => setFilterType('combined')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                      filterType === 'combined' ? 'bg-advisor-600 text-white shadow-md' : 'text-advisor-400 hover:text-advisor-600'
+                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                      filterType === 'combined'
+                        ? 'bg-advisor-600 text-white shadow-md'
+                        : 'text-advisor-400 hover:text-advisor-600'
                     }`}
                   >
-                    KẾT HỢP ({analysis?.fatherLast} {analysis?.motherLast})
+                    Ghép họ ({analysis.fatherLast} {analysis.motherLast})
                   </button>
                 </div>
               )}
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredNames.map((name: any) => {
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {filteredNames.map((name) => {
                 const nameNumbers: number[] = [];
-                for (let i = 1; i <= 9; i++) {
+                for (let i = 1; i <= 9; i += 1) {
                   if (name.mask & (1 << (i - 1))) {
                     nameNumbers.push(i);
                   }
@@ -273,12 +316,7 @@ export default function Home() {
 
                 return (
                   <div key={name.name} className="relative">
-                    {name.isPerfect && (
-                      <div className="absolute -top-2 -right-2 z-20 bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg flex items-center gap-1 animate-bounce">
-                        <CheckCircle2 size={12} /> CÂN BẰNG 100%
-                      </div>
-                    )}
-                    <NameCard 
+                    <NameCard
                       name={name.name}
                       meaning={name.meaning}
                       numbers={nameNumbers}
@@ -291,20 +329,23 @@ export default function Home() {
             </div>
 
             {storytelling && (
-              <div className="mt-8 bg-white p-8 rounded-3xl border-2 border-advisor-500 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 text-advisor-100 group-hover:text-advisor-200 transition-colors">
+              <div className="group relative mt-8 overflow-hidden rounded-3xl border-2 border-advisor-500 bg-white p-8 shadow-2xl">
+                <div className="absolute right-0 top-0 p-4 text-advisor-100 transition-colors group-hover:text-advisor-200">
                   <Sparkles size={120} />
                 </div>
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-black text-advisor-900 flex items-center gap-3">
+                  <div className="mb-6 flex items-center justify-between">
+                    <h3 className="flex items-center gap-3 text-2xl font-black text-advisor-900">
                       <MessageSquare className="text-advisor-600" /> Hồ sơ tên: {selectedName}
                     </h3>
-                    <button onClick={() => setStorytelling(null)} className="text-slate-400 hover:text-rose-500">
+                    <button
+                      onClick={() => setStorytelling(null)}
+                      className="text-slate-400 hover:text-rose-500"
+                    >
                       <XCircle size={24} />
                     </button>
                   </div>
-                  <div className="text-advisor-800 leading-relaxed whitespace-pre-line text-lg font-medium italic">
+                  <div className="whitespace-pre-line text-lg font-medium italic leading-relaxed text-advisor-800">
                     {storytelling}
                   </div>
                 </div>

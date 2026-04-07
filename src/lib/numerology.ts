@@ -54,3 +54,18 @@ export function getDateDigits(date: string): number[] {
     .map(Number)
     .filter((n) => n > 0); // Thần số học Pytago không tính số 0
 }
+
+/**
+ * Generates a bitmask from a birth date.
+ * Each digit (1-9) in the date sets a corresponding bit.
+ */
+export function generateBitmaskFromDate(date: string): number {
+  const digits = getDateDigits(date);
+  let mask = 0;
+  for (const digit of digits) {
+    if (digit >= 1 && digit <= 9) {
+      mask |= (1 << (digit - 1));
+    }
+  }
+  return mask;
+}

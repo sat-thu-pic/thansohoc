@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, MessageSquare, RefreshCw, Sparkles, XCircle } from 'lucide-react';
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
 import NameCard from '@/components/cards/NameCard';
@@ -34,6 +34,7 @@ export default function Home() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [storytelling, setStorytelling] = useState<string | null>(null);
   const [isAIHeading, setIsAIHeading] = useState(false);
+  const [aiSuggestedName, setAiSuggestedName] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<FilterType>('suggested');
 
   const analysis = useMemo(() => {
@@ -99,10 +100,7 @@ export default function Home() {
           const normalizedMiddle = normalizePart(combination.middleName);
           const normalizedFirst = normalizePart(combination.firstName);
 
-          if (normalizedMiddle === normalizedFirst) {
-            return false;
-          }
-
+          if (normalizedMiddle === normalizedFirst) return false;
           if (surnameParts.includes(normalizedMiddle) || surnameParts.includes(normalizedFirst)) {
             return false;
           }
@@ -162,15 +160,65 @@ export default function Home() {
   const filteredNames = useMemo(() => {
     if (!analysis) return [];
     if (filterType === 'suggested') {
-      return analysis.allNames.length > 0 ? [analysis.allNames[0]] : [];
+      if (analysis.allNames.length === 0) return [];
+      if (!aiSuggestedName) return [analysis.allNames[0]];
+
+      const matched = analysis.allNames.find((name) => name.name === aiSuggestedName);
+      return matched ? [matched] : [analysis.allNames[0]];
     }
+
     return analysis.allNames.filter((name) => name.type === filterType);
-  }, [analysis, filterType]);
+  }, [aiSuggestedName, analysis, filterType]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const selectBestName = async () => {
+      if (!analysis || !inputData || analysis.allNames.length === 0) {
+        setAiSuggestedName(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/suggest-best', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            birthDate: inputData.birthDate,
+            lifePath: analysis.lifePath,
+            missingNumbers: analysis.missingNumbers,
+            candidates: analysis.allNames.map((name) => ({
+              name: name.name,
+              meaning: name.meaning,
+              type: name.type,
+            })),
+          }),
+        });
+
+        const data = await response.json();
+        if (!cancelled) {
+          setAiSuggestedName(data.selectedName ?? null);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          setAiSuggestedName(null);
+        }
+      }
+    };
+
+    void selectBestName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [analysis, inputData]);
 
   const handleStart = (data: FormData) => {
     setInputData(data);
-    setStorytelling(null);
     setSelectedName(null);
+    setStorytelling(null);
+    setAiSuggestedName(null);
     setFilterType('suggested');
   };
 
@@ -269,28 +317,28 @@ export default function Home() {
                 </p>
               </div>
 
-              {!analysis.isSameLast && (
-                <div className="flex rounded-xl border border-advisor-100 bg-white p-1 shadow-sm">
-                  <button
-                    onClick={() => setFilterType('suggested')}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                      filterType === 'suggested'
-                        ? 'bg-advisor-600 text-white shadow-md'
-                        : 'text-advisor-400 hover:text-advisor-600'
-                    }`}
-                  >
-                    Gợi ý
-                  </button>
-                  <button
-                    onClick={() => setFilterType('father')}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                      filterType === 'father'
-                        ? 'bg-advisor-600 text-white shadow-md'
-                        : 'text-advisor-400 hover:text-advisor-600'
-                    }`}
-                  >
-                    Họ bố ({analysis.fatherLast})
-                  </button>
+              <div className="flex rounded-xl border border-advisor-100 bg-white p-1 shadow-sm">
+                <button
+                  onClick={() => setFilterType('suggested')}
+                  className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                    filterType === 'suggested'
+                      ? 'bg-advisor-600 text-white shadow-md'
+                      : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  Gợi ý
+                </button>
+                <button
+                  onClick={() => setFilterType('father')}
+                  className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                    filterType === 'father'
+                      ? 'bg-advisor-600 text-white shadow-md'
+                      : 'text-advisor-400 hover:text-advisor-600'
+                  }`}
+                >
+                  Họ bố ({analysis.fatherLast})
+                </button>
+                {!analysis.isSameLast && (
                   <button
                     onClick={() => setFilterType('combined')}
                     className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
@@ -301,8 +349,8 @@ export default function Home() {
                   >
                     Ghép họ ({analysis.fatherLast} {analysis.motherLast})
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

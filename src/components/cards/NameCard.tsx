@@ -6,11 +6,12 @@ import { Sparkles, Loader2 } from 'lucide-react';
 interface NameCardProps {
   name: string;
   meaning: string;
+  numbers: number[]; // Danh sách các số mà tên này chứa
   onSelect: () => void;
   isLoading?: boolean;
 }
 
-export default function NameCard({ name, meaning, onSelect, isLoading }: NameCardProps) {
+export default function NameCard({ name, meaning, numbers, onSelect, isLoading }: NameCardProps) {
   return (
     <div 
       onClick={onSelect}
@@ -25,6 +26,15 @@ export default function NameCard({ name, meaning, onSelect, isLoading }: NameCar
         <div className="p-2 bg-advisor-50 text-advisor-500 rounded-lg shrink-0">
           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {numbers.sort().map(num => (
+          <span key={num} className="w-6 h-6 flex items-center justify-center bg-advisor-50 text-advisor-600 rounded text-[10px] font-bold border border-advisor-100">
+            {num}
+          </span>
+        ))}
+        <span className="text-[10px] text-advisor-400 self-center ml-1 italic">Rung động bổ trợ</span>
       </div>
       
       <p className="text-advisor-600 text-sm leading-relaxed italic border-l-2 border-advisor-200 pl-4">

@@ -280,15 +280,26 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredNames.map((name: any) => (
-                <NameCard 
-                  key={name.name}
-                  name={name.name}
-                  meaning={name.meaning}
-                  isLoading={isAIHeading && selectedName === name.name}
-                  onSelect={() => handleFetchStorytelling(name.name)}
-                />
-              ))}
+              {filteredNames.map((name: any) => {
+                // Tính toán danh sách số từ mask của tên
+                const nameNumbers: number[] = [];
+                for (let i = 1; i <= 9; i++) {
+                  if (name.mask & (1 << (i - 1))) {
+                    nameNumbers.push(i);
+                  }
+                }
+
+                return (
+                  <NameCard 
+                    key={name.name}
+                    name={name.name}
+                    meaning={name.meaning}
+                    numbers={nameNumbers}
+                    isLoading={isAIHeading && selectedName === name.name}
+                    onSelect={() => handleFetchStorytelling(name.name)}
+                  />
+                );
+              })}
             </div>
 
             {/* AI Storytelling Result */}

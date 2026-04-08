@@ -72,100 +72,123 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
       return;
     }
 
-    onStart({ 
-      ...formData, 
-      parentName: fatherLast, 
-      motherLastName: motherLast 
+    onStart({
+      ...formData,
+      parentName: fatherLast,
+      motherLastName: motherLast
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-2xl shadow-xl border border-advisor-100 flex flex-col gap-6">
-      {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-sm font-medium flex items-center gap-2">
-          <XCircle size={18} /> {error}
+    <div className="w-full bg-surface-container-lowest rounded-xl p-8 md:p-14 botanical-shadow relative z-10">
+      {/* Asymmetric background accent inside card */}
+      <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-surface-container-low rounded-bl-full -z-0"></div>
+
+      <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10 relative z-10 w-full max-w-full">
+        {error && (
+          <div className="p-4 bg-error-container border-l-4 border-error text-on-error-container rounded-r-lg text-sm font-label tracking-wide flex items-center gap-3">
+            <span className="material-symbols-outlined">error</span> {error}
+          </div>
+        )}
+
+        {/* Row 1: Surnames */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          <div className="flex flex-col gap-3 group">
+            <label className="font-label text-xs font-semibold tracking-[0.15em] text-on-surface-variant uppercase px-1">
+              Họ của Bố
+            </label>
+            <div className="input-focus-glow transition-all duration-300 rounded-lg bg-surface-container-low">
+              <input
+                type="text"
+                required
+                value={formData.parentName}
+                onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
+                className="w-full bg-transparent border-none focus:ring-0 px-5 py-4 text-on-surface font-body placeholder:text-outline-variant placeholder:font-light outline-none"
+                placeholder="Nhập họ bố..."
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 group">
+            <label className="font-label text-xs font-semibold tracking-[0.15em] text-on-surface-variant uppercase px-1">
+              Họ của Mẹ
+            </label>
+            <div className="input-focus-glow transition-all duration-300 rounded-lg bg-surface-container-low">
+              <input
+                type="text"
+                required
+                value={formData.motherLastName}
+                onChange={(e) => setFormData({ ...formData, motherLastName: e.target.value })}
+                className="w-full bg-transparent border-none focus:ring-0 px-5 py-4 text-on-surface font-body placeholder:text-outline-variant placeholder:font-light outline-none"
+                placeholder="Nhập họ mẹ..."
+              />
+            </div>
+          </div>
         </div>
-      )}
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
-            <User size={16} /> Họ của Bố
+
+        {/* Row 2: Gender Segmented Control */}
+        <div className="flex flex-col gap-4">
+          <label className="font-label text-xs font-semibold tracking-[0.15em] text-on-surface-variant uppercase px-1">
+            Giới tính của bé
           </label>
-          <input
-            type="text"
-            required
-            value={formData.parentName}
-            onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-            placeholder="Ví dụ: Nguyễn"
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
-          />
+          <div className="flex p-1.5 bg-surface-container-low rounded-full w-full">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, babyGender: 'boy' })}
+              className={`flex-1 py-3 px-6 rounded-full text-sm font-medium font-body transition-all duration-300 ${formData.babyGender === 'boy'
+                ? 'bg-white shadow-sm text-primary font-bold'
+                : 'text-stone-500 hover:text-on-surface'
+                }`}
+            >
+              Bé Trai
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, babyGender: 'girl' })}
+              className={`flex-1 py-3 px-6 rounded-full text-sm font-medium font-body transition-all duration-300 ${formData.babyGender === 'girl'
+                ? 'bg-white shadow-sm text-primary font-bold'
+                : 'text-stone-500 hover:text-on-surface'
+                }`}
+            >
+              Bé Gái
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
-            <User size={16} /> Họ của Mẹ
+
+        {/* Row 3: Date of Birth */}
+        <div className="flex flex-col gap-3">
+          <label className="font-label text-xs font-semibold tracking-[0.15em] text-on-surface-variant uppercase px-1">
+            Ngày sinh
           </label>
-          <input
-            type="text"
-            required
-            value={formData.motherLastName}
-            onChange={(e) => setFormData({ ...formData, motherLastName: e.target.value })}
-            placeholder="Ví dụ: Trần"
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
-          />
+          <div className="input-focus-glow transition-all duration-300 rounded-lg bg-surface-container-low relative flex items-center">
+            <input
+              type="date"
+              required
+              value={formData.birthDate}
+              onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+              className="w-full bg-transparent border-none focus:ring-0 px-5 py-4 text-on-surface font-body outline-none appearance-none cursor-pointer"
+            />
+            {/* The calendar icon is hidden natively by some browsers or we can overlay a custom one */}
+          </div>
+          <p className="text-[11px] text-stone-400 font-body italic px-1">
+            Tần số rung động được tính toán dựa trên ngày sinh dương lịch.
+          </p>
         </div>
-      </div>
-      <p className="text-[10px] text-advisor-400 italic -mt-4">* Hệ thống sẽ gợi ý tên theo cả họ Bố và họ Mẹ.</p>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
-          <Baby size={16} /> Giới tính của bé
-        </label>
-        <div className="flex gap-4">
+        {/* CTA Section */}
+        <div className="pt-6">
           <button
-            type="button"
-            onClick={() => setFormData({ ...formData, babyGender: 'boy' })}
-            className={`flex-1 py-3 rounded-lg border transition-all ${
-              formData.babyGender === 'boy'
-                ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold'
-                : 'border-slate-200 text-slate-500 hover:border-blue-200'
-            }`}
+            type="submit"
+            className="sage-gradient-btn w-full py-5 rounded-full text-on-primary font-label font-bold tracking-[0.2em] text-sm uppercase transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20"
           >
-            Bé Trai
+            BẮT ĐẦU TƯ VẤN
           </button>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, babyGender: 'girl' })}
-            className={`flex-1 py-3 rounded-lg border transition-all ${
-              formData.babyGender === 'girl'
-                ? 'bg-pink-50 border-pink-500 text-pink-700 font-bold'
-                : 'border-slate-200 text-slate-500 hover:border-pink-200'
-            }`}
-          >
-            Bé Gái
-          </button>
+          <p className="text-center mt-6 text-xs text-on-surface-variant/60 font-body tracking-wide">
+            Hơn 10,000+ phụ huynh đã tin dùng Cố Vấn Đặt Tên
+
+          </p>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-advisor-700 flex items-center gap-2">
-          <Calendar size={16} /> Ngày sinh (Dự kiến hoặc chính xác)
-        </label>
-        <input
-          type="date"
-          required
-          value={formData.birthDate}
-          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-          className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-advisor-500 text-slate-900 transition-all"
-        />
-      </div>
-
-      <button
-        type="submit"
-        className="w-full mt-4 bg-advisor-600 hover:bg-advisor-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-advisor-200 transform transition-all hover:-translate-y-1 active:scale-95"
-      >
-        BẮT ĐẦU TƯ VẤN
-      </button>
-    </form>
+      </form>
+    </div>
   );
 }

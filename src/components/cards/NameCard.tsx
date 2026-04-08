@@ -1,7 +1,4 @@
-'use client';
-
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { NameAnalysis } from '@/lib/storytelling';
 
 interface NameCardProps {
@@ -17,86 +14,99 @@ export default function NameCard({
   analysis,
   isSuggested = false,
 }: NameCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(isSuggested);
 
   return (
-    <div
-      className={`group flex flex-col gap-4 rounded-2xl border-2 bg-white p-6 transition-all ${
-        isSuggested
-          ? 'border-advisor-500 shadow-lg'
-          : 'border-advisor-100 shadow-sm'
-      }`}
-    >
-      <div className="flex items-start justify-between">
-        <h4 className="whitespace-pre-line text-xl font-black leading-relaxed text-advisor-900">
-          {name}
-        </h4>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {numbers
-          .slice()
-          .sort((a, b) => a - b)
-          .map((num) => (
-            <span
-              key={num}
-              className="flex h-6 w-6 items-center justify-center rounded border border-advisor-100 bg-advisor-50 text-[10px] font-bold text-advisor-600"
-            >
-              {num}
-            </span>
-          ))}
-      </div>
-
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 rounded-lg bg-advisor-50 px-4 py-2 text-sm font-bold text-advisor-700 transition-colors hover:bg-advisor-100"
-      >
-        <span>Phân tích tên</span>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
-
-      {isExpanded && (
-        <div className="space-y-4">
-          {/* Intro */}
-          <p className="text-sm leading-relaxed text-advisor-800">{analysis.intro}</p>
-
-          {/* Life Path */}
-          <p className="text-sm font-medium text-advisor-700">{analysis.lifePathSection}</p>
-
-          {/* Table for each name part */}
-          {analysis.nameBreakdown.map((part, idx) => (
-            <div key={idx} className="rounded-lg border border-advisor-100 overflow-hidden">
-              <div className="bg-advisor-50 px-3 py-2 text-sm font-bold text-advisor-700">
-                {part.part}: {part.name}
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {part.letters.map((item, i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="px-3 py-1.5 font-mono font-bold text-advisor-600 w-12 text-center">
-                        {item.letter}
-                      </td>
-                      <td className="px-3 py-1.5 text-slate-500 w-8 text-center">→</td>
-                      <td className="px-3 py-1.5 font-bold text-advisor-600 w-16 text-center">
-                        {item.number}
-                      </td>
-                      <td className="px-3 py-1.5 text-advisor-800">
-                        {item.meaning}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <div className={`rounded-xl transition-all duration-300 flex flex-col overflow-hidden relative shadow-sm ${
+      isExpanded 
+        ? "bg-surface-container-lowest border-l-4 border-primary" 
+        : "bg-surface-container-low hover:bg-surface-container-high"
+    }`}>
+      <div className={`p-6 md:p-8 ${isExpanded ? "pb-4" : ""}`}>
+        {isExpanded && (
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <span className="material-symbols-outlined text-9xl">auto_awesome</span>
+          </div>
+        )}
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className={`headline-serif font-bold text-on-surface ${isExpanded ? "text-3xl" : "text-2xl"}`}>{name}</h3>
+            {isExpanded && isSuggested && (
+               <div className="flex gap-2">
+                 <span className="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold uppercase rounded-md tracking-widest leading-normal">
+                   Perfect Match
+                 </span>
+               </div>
+            )}
+          </div>
+          
+          {!isExpanded && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {numbers.slice().sort((a,b)=>a-b).map((num) => (
+                <span key={num} className="w-8 h-8 flex items-center justify-center bg-surface-container-lowest rounded text-[10px] font-bold text-primary">
+                  {num}
+                </span>
+              ))}
             </div>
-          ))}
+          )}
 
-          {/* Balance */}
-          <p className="text-sm font-medium text-advisor-700">{analysis.balanceSection}</p>
+          {/* Expanded Content */}
+          {isExpanded && (
+            <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="max-w-2xl mb-10 mt-4">
+                <p className="headline-serif text-xl md:text-2xl italic text-on-surface-variant leading-relaxed">
+                  "{analysis.intro}"
+                </p>
+              </div>
 
-          {/* Conclusion */}
-          <p className="text-sm italic text-advisor-600">{analysis.conclusion}</p>
+              <div className="mb-10">
+                <h4 className="font-label text-[11px] font-extrabold tracking-[0.2em] uppercase text-primary mb-6">Phân tích tên</h4>
+                
+                {analysis.nameBreakdown.map((part, idx) => (
+                  <div key={idx} className="mb-8">
+                    <h5 className="font-label text-[10px] font-bold tracking-widest text-on-surface-variant uppercase mb-4 opacity-70 border-b border-outline-variant/20 pb-2">{part.part}: {part.name}</h5>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-outline-variant/10">
+                            <th className="pb-3 px-2 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Chữ cái</th>
+                            <th className="pb-3 px-4 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Số học</th>
+                            <th className="pb-3 pr-2 text-right font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Năng lượng</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-body text-sm">
+                          {part.letters.map((item, i) => (
+                            <tr key={i} className="hover:bg-surface-container-low transition-colors group/row border-b border-outline-variant/5 last:border-0">
+                              <td className="py-3 px-2 font-headline font-bold text-lg">{item.letter}</td>
+                              <td className="py-3 px-4 font-headline font-bold text-lg text-primary">{item.number}</td>
+                              <td className="py-3 pr-2 text-right text-on-surface-variant">{item.meaning}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-primary-fixed/30 p-6 rounded-xl mt-2">
+                <p className="text-on-primary-fixed-variant text-sm font-medium italic">
+                  {analysis.conclusion}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+      
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full py-4 border-t border-outline-variant/10 hover:bg-surface-container-lowest/50 transition-colors flex items-center justify-center gap-2 mt-auto"
+      >
+        <span className="text-[10px] font-bold font-label uppercase tracking-widest text-primary">
+          {isExpanded ? "Thu gọn ∧" : "Phân tích chi tiết ∨"}
+        </span>
+      </button>
     </div>
   );
 }

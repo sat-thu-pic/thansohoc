@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Thần số học Pytago - Naming Advisor",
+  title: "Thần số học Pytago - Cố Vấn Đặt Tên",
   description: "Hệ thống cố vấn đặt tên cân bằng theo Thần số học Pytago",
 };
 
@@ -17,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi">
-      <body className={inter.className}>
+    <html lang="vi" className="light">
+      <body className="bg-surface font-body text-on-surface selection:bg-primary-fixed min-h-screen flex flex-col overflow-x-hidden">
         <SecurityProvider>{children}</SecurityProvider>
       </body>
     </html>

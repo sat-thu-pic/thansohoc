@@ -19,7 +19,7 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
   const [formData, setFormData] = useState<FormData>({
     parentName: '',
     motherLastName: '',
-    babyGender: 'neutral',
+    babyGender: 'boy',
     birthDate: '',
     lastName: '',
   });

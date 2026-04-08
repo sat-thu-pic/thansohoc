@@ -1,39 +1,35 @@
 'use client';
 
-import React from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface NameCardProps {
   name: string;
-  meaning: string;
   numbers: number[];
-  onSelect: () => void;
-  isLoading?: boolean;
+  storytelling: string;
+  isSuggested?: boolean;
 }
 
 export default function NameCard({
   name,
-  meaning,
   numbers,
-  onSelect,
-  isLoading,
+  storytelling,
+  isSuggested = false,
 }: NameCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div
-      onClick={onSelect}
-      className={`group flex cursor-pointer flex-col gap-4 rounded-2xl border-2 bg-white p-6 transition-all active:scale-95 ${
-        isLoading
-          ? 'border-advisor-500 shadow-md'
-          : 'border-advisor-100 shadow-sm hover:border-advisor-300 hover:shadow-md'
+      className={`group flex flex-col gap-4 rounded-2xl border-2 bg-white p-6 transition-all ${
+        isSuggested
+          ? 'border-advisor-500 shadow-lg'
+          : 'border-advisor-100 shadow-sm'
       }`}
     >
       <div className="flex items-start justify-between">
-        <h4 className="whitespace-pre-line text-xl font-black leading-relaxed text-advisor-900 transition-colors group-hover:text-advisor-600">
+        <h4 className="whitespace-pre-line text-xl font-black leading-relaxed text-advisor-900">
           {name}
         </h4>
-        <div className="shrink-0 rounded-lg bg-advisor-50 p-2 text-advisor-500">
-          {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
-        </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
@@ -48,14 +44,24 @@ export default function NameCard({
               {num}
             </span>
           ))}
-        <span className="ml-1 self-center text-[10px] italic text-advisor-400">
-          Rung động bổ trợ
-        </span>
+
       </div>
 
-      <p className="border-l-2 border-advisor-200 pl-4 text-sm italic leading-relaxed text-advisor-600">
-        {meaning}
-      </p>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 rounded-lg bg-advisor-50 px-4 py-2 text-sm font-bold text-advisor-700 transition-colors hover:bg-advisor-100"
+      >
+        <span>Phân tích tên</span>
+        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+
+      {isExpanded && (
+        <div className="rounded-xl bg-advisor-50 p-4">
+          <p className="text-sm leading-relaxed text-advisor-800">
+            {storytelling}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

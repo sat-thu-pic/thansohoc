@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, MessageSquare, RefreshCw, Sparkles, XCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
 import AdvisorForm, { FormData } from '@/components/forms/AdvisorForm';
 import NameCard from '@/components/cards/NameCard';
 import EnergyGrid from '@/components/visuals/EnergyGrid';
@@ -9,6 +9,10 @@ import firstNames from '@/data/firstNames.json';
 import middleNames from '@/data/middleNames.json';
 import { generateBitmask, getMissingNumbers } from '@/lib/bitmask';
 import { calculateLifePath, getDateDigits, mapNameToNumbers } from '@/lib/numerology';
+import {
+  generateStorytelling,
+  getMissingNumbersNarrative,
+} from '@/lib/storytelling';
 
 const FULL_MASK = 511;
 
@@ -31,10 +35,6 @@ type NameCombination = {
 
 export default function Home() {
   const [inputData, setInputData] = useState<FormData | null>(null);
-  const [selectedName, setSelectedName] = useState<string | null>(null);
-  const [storytelling, setStorytelling] = useState<string | null>(null);
-  const [isAIHeading, setIsAIHeading] = useState(false);
-  const [aiSuggestedName, setAiSuggestedName] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<FilterType>('suggested');
 
   const analysis = useMemo(() => {
@@ -141,6 +141,14 @@ export default function Home() {
         ? fatherSuggested
         : [...fatherSuggested, ...motherSuggested, ...combinedSuggested];
 
+    // Calculate present numbers (numbers in birth date)
+    const presentNumbers: number[] = [];
+    for (let i = 1; i <= 9; i += 1) {
+      if (!missingNumbers.includes(i)) {
+        presentNumbers.push(i);
+      }
+    }
+
     return {
       allNames,
       birthDateMask,
@@ -149,6 +157,7 @@ export default function Home() {
       lifePath,
       missingNumbers,
       motherLast: motherLastTitle,
+      presentNumbers,
     };
   }, [inputData]);
 
@@ -160,95 +169,63 @@ export default function Home() {
   const filteredNames = useMemo(() => {
     if (!analysis) return [];
     if (filterType === 'suggested') {
+      // Fallback: use the first name from allNames as suggested
       if (analysis.allNames.length === 0) return [];
-      if (!aiSuggestedName) return [analysis.allNames[0]];
-
-      const matched = analysis.allNames.find((name) => name.name === aiSuggestedName);
-      return matched ? [matched] : [analysis.allNames[0]];
+      return [analysis.allNames[0]];
     }
 
     return analysis.allNames.filter((name) => name.type === filterType);
-  }, [aiSuggestedName, analysis, filterType]);
+  }, [analysis, filterType]);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Generate storytelling for each name
+  const namesWithStorytelling = useMemo(() => {
+    if (!analysis) return [];
 
-    const selectBestName = async () => {
-      if (!analysis || !inputData || analysis.allNames.length === 0) {
-        setAiSuggestedName(null);
-        return;
-      }
+    return filteredNames.map((nameData, index) => {
+      // Extract first name and middle name from the full name
+      const nameParts = nameData.name.split(' ');
+      const firstName = nameParts[nameParts.length - 1] || '';
+      const middleName = nameParts.slice(1, -1).join(' ') || '';
 
-      try {
-        const response = await fetch('/api/suggest-best', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            birthDate: inputData.birthDate,
-            lifePath: analysis.lifePath,
-            missingNumbers: analysis.missingNumbers,
-            candidates: analysis.allNames.map((name) => ({
-              name: name.name,
-              meaning: name.meaning,
-              type: name.type,
-            })),
-          }),
-        });
+      // Find meanings from data
+      const firstNameData = firstNames.find(
+        (f) => f.name.toLowerCase() === firstName.toLowerCase()
+      );
+      const middleNameData = middleNames.find(
+        (m) => m.name.toLowerCase() === middleName.toLowerCase()
+      );
 
-        const data = await response.json();
-        if (!cancelled) {
-          setAiSuggestedName(data.selectedName ?? null);
-        }
-      } catch (error) {
-        console.error(error);
-        if (!cancelled) {
-          setAiSuggestedName(null);
+      // Calculate filled numbers (numbers that the name contributes to fill missing)
+      const filledNumbers: number[] = [];
+      for (let i = 1; i <= 9; i += 1) {
+        if (analysis.missingNumbers.includes(i) && (nameData.mask & (1 << (i - 1)))) {
+          filledNumbers.push(i);
         }
       }
-    };
 
-    void selectBestName();
+      const storytelling = generateStorytelling({
+        fullName: nameData.name,
+        firstName,
+        middleName,
+        firstNameMeaning: firstNameData?.meaning || '',
+        middleNameMeaning: middleNameData?.meaning || '',
+        lifePath: analysis.lifePath,
+        missingNumbers: analysis.missingNumbers,
+        filledNumbers,
+      });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [analysis, inputData]);
+      return {
+        ...nameData,
+        storytelling,
+        // Mark first item as suggested in 'suggested' tab
+        isSuggested: filterType === 'suggested' && index === 0,
+      };
+    });
+  }, [analysis, filteredNames, filterType]);
 
   const handleStart = (data: FormData) => {
     setInputData(data);
-    setSelectedName(null);
-    setStorytelling(null);
-    setAiSuggestedName(null);
     setFilterType('suggested');
-  };
-
-  const handleFetchStorytelling = async (name: string) => {
-    if (!inputData || !analysis) return;
-
-    setIsAIHeading(true);
-    setSelectedName(name);
-
-    try {
-      const response = await fetch('/api/storytelling', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lastName: inputData.lastName,
-          name,
-          birthDate: inputData.birthDate,
-          lifePath: analysis.lifePath,
-          missingNumbers: analysis.missingNumbers,
-        }),
-      });
-
-      const data = await response.json();
-      setStorytelling(data.storytelling);
-    } catch (error) {
-      console.error(error);
-      setStorytelling('Có lỗi xảy ra khi kết nối với AI Advisor.');
-    } finally {
-      setIsAIHeading(false);
-    }
   };
 
   if (!inputData) {
@@ -289,20 +266,27 @@ export default function Home() {
               <h4 className="mb-4 flex items-center gap-2 font-bold text-advisor-900">
                 <RefreshCw size={18} className="text-advisor-500" /> Số thiếu theo ngày sinh
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {analysis.missingNumbers.map((number) => (
-                  <span
-                    key={number}
-                    className="rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-sm font-bold text-rose-600"
-                  >
-                    Số {number}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-4 text-sm italic leading-relaxed text-slate-500">
-                Các tên dưới đây chỉ được giữ lại khi ghép với ngày sinh và họ tương ứng tạo thành
-                bộ mask đủ từ 1 đến 9.
-              </p>
+              {analysis.missingNumbers.length === 0 ? (
+                <p className="text-sm leading-relaxed text-slate-600">
+                  {getMissingNumbersNarrative(analysis.missingNumbers, analysis.presentNumbers)}
+                </p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {analysis.missingNumbers.map((number) => (
+                      <span
+                        key={number}
+                        className="rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-sm font-bold text-rose-600"
+                      >
+                        Số {number}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-600">
+                    {getMissingNumbersNarrative(analysis.missingNumbers, analysis.presentNumbers)}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -350,8 +334,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {filteredNames.map((name) => {
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
+              {namesWithStorytelling.map((name) => {
                 const nameNumbers: number[] = [];
                 for (let i = 1; i <= 9; i += 1) {
                   if (name.mask & (1 << (i - 1))) {
@@ -360,42 +344,16 @@ export default function Home() {
                 }
 
                 return (
-                  <div key={name.name} className="relative">
-                    <NameCard
-                      name={name.name}
-                      meaning={name.meaning}
-                      numbers={nameNumbers}
-                      isLoading={isAIHeading && selectedName === name.name}
-                      onSelect={() => handleFetchStorytelling(name.name)}
-                    />
-                  </div>
+                  <NameCard
+                    key={name.name}
+                    name={name.name}
+                    numbers={nameNumbers}
+                    storytelling={name.storytelling}
+                    isSuggested={name.isSuggested}
+                  />
                 );
               })}
             </div>
-
-            {storytelling && (
-              <div className="group relative mt-8 overflow-hidden rounded-3xl border-2 border-advisor-500 bg-white p-8 shadow-2xl">
-                <div className="absolute right-0 top-0 p-4 text-advisor-100 transition-colors group-hover:text-advisor-200">
-                  <Sparkles size={120} />
-                </div>
-                <div className="relative z-10">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="flex items-center gap-3 text-2xl font-black text-advisor-900">
-                      <MessageSquare className="text-advisor-600" /> Hồ sơ tên: {selectedName}
-                    </h3>
-                    <button
-                      onClick={() => setStorytelling(null)}
-                      className="text-slate-400 hover:text-rose-500"
-                    >
-                      <XCircle size={24} />
-                    </button>
-                  </div>
-                  <div className="whitespace-pre-line text-lg font-medium italic leading-relaxed text-advisor-800">
-                    {storytelling}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -11,7 +11,9 @@
     "mask": "node scripts/generate-mask.cjs"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.60",
     "@google/generative-ai": "^0.24.1",
+    "ai": "^6.0.152",
     "clsx": "^2.1.1",
     "lucide-react": "^0.378.0",
     "next": "14.2.3",

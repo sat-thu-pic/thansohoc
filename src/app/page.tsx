@@ -275,6 +275,10 @@ export default function Home() {
     );
   }
 
+  if (!analysis) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col w-full relative">
       <nav className="sticky top-0 z-50 w-full px-6 md:px-8 py-6 bg-surface/80 backdrop-blur-md flex items-center justify-between">

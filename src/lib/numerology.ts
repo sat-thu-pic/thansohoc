@@ -16,9 +16,12 @@ const PYTAGO_MAP: Record<string, number> = {
  */
 export function mapNameToNumbers(name: string): number[] {
   // Loại bỏ dấu tiếng Việt trước khi mapping (nếu có)
+  // Đ/đ là ký tự đặc biệt, cần replace riêng
   const cleanName = name
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/Đ/g, 'D')
+    .replace(/đ/g, 'd')
     .toUpperCase();
 
   return cleanName

@@ -10,7 +10,7 @@ import middleNames from '@/data/middleNames.json';
 import { generateBitmask, getMissingNumbers } from '@/lib/bitmask';
 import { calculateLifePath, getDateDigits, mapNameToNumbers } from '@/lib/numerology';
 import {
-  generateStorytelling,
+  generateNameAnalysis,
   getMissingNumbersNarrative,
 } from '@/lib/storytelling';
 
@@ -203,20 +203,23 @@ export default function Home() {
         }
       }
 
-      const storytelling = generateStorytelling({
-        fullName: nameData.name,
-        firstName,
+      // Extract surname (first word of full name)
+      const surname = nameParts[0] || '';
+
+      const nameAnalysis = generateNameAnalysis(
+        surname,
         middleName,
-        firstNameMeaning: firstNameData?.meaning || '',
-        middleNameMeaning: middleNameData?.meaning || '',
-        lifePath: analysis.lifePath,
-        missingNumbers: analysis.missingNumbers,
-        filledNumbers,
-      });
+        firstName,
+        middleNameData?.meaning || '',
+        firstNameData?.meaning || '',
+        analysis.lifePath,
+        analysis.missingNumbers,
+        filledNumbers
+      );
 
       return {
         ...nameData,
-        storytelling,
+        analysis: nameAnalysis,
         // Mark first item as suggested in 'suggested' tab
         isSuggested: filterType === 'suggested' && index === 0,
       };
@@ -348,7 +351,7 @@ export default function Home() {
                     key={name.name}
                     name={name.name}
                     numbers={nameNumbers}
-                    storytelling={name.storytelling}
+                    analysis={name.analysis}
                     isSuggested={name.isSuggested}
                   />
                 );

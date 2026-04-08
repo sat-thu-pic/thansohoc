@@ -2,18 +2,19 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { NameAnalysis } from '@/lib/storytelling';
 
 interface NameCardProps {
   name: string;
   numbers: number[];
-  storytelling: string;
+  analysis: NameAnalysis;
   isSuggested?: boolean;
 }
 
 export default function NameCard({
   name,
   numbers,
-  storytelling,
+  analysis,
   isSuggested = false,
 }: NameCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -44,7 +45,9 @@ export default function NameCard({
               {num}
             </span>
           ))}
-
+        <span className="ml-1 self-center text-[10px] italic text-advisor-400">
+          Rung động bổ trợ
+        </span>
       </div>
 
       <button
@@ -56,10 +59,45 @@ export default function NameCard({
       </button>
 
       {isExpanded && (
-        <div className="rounded-xl bg-advisor-50 p-4">
-          <p className="text-sm leading-relaxed text-advisor-800">
-            {storytelling}
-          </p>
+        <div className="space-y-4">
+          {/* Intro */}
+          <p className="text-sm leading-relaxed text-advisor-800">{analysis.intro}</p>
+
+          {/* Life Path */}
+          <p className="text-sm font-medium text-advisor-700">{analysis.lifePathSection}</p>
+
+          {/* Table for each name part */}
+          {analysis.nameBreakdown.map((part, idx) => (
+            <div key={idx} className="rounded-lg border border-advisor-100 overflow-hidden">
+              <div className="bg-advisor-50 px-3 py-2 text-sm font-bold text-advisor-700">
+                {part.part}: {part.name}
+              </div>
+              <table className="w-full text-sm">
+                <tbody>
+                  {part.letters.map((item, i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-3 py-1.5 font-mono font-bold text-advisor-600 w-12 text-center">
+                        {item.letter}
+                      </td>
+                      <td className="px-3 py-1.5 text-slate-500 w-8 text-center">→</td>
+                      <td className="px-3 py-1.5 font-bold text-advisor-600 w-16 text-center">
+                        {item.number}
+                      </td>
+                      <td className="px-3 py-1.5 text-advisor-800">
+                        {item.meaning}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          {/* Balance */}
+          <p className="text-sm font-medium text-advisor-700">{analysis.balanceSection}</p>
+
+          {/* Conclusion */}
+          <p className="text-sm italic text-advisor-600">{analysis.conclusion}</p>
         </div>
       )}
     </div>

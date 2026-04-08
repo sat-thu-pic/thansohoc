@@ -45,9 +45,6 @@ export default function NameCard({
               {num}
             </span>
           ))}
-        <span className="ml-1 self-center text-[10px] italic text-advisor-400">
-          Rung động bổ trợ
-        </span>
       </div>
 
       <button

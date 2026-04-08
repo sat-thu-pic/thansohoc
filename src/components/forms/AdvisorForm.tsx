@@ -184,7 +184,7 @@ export default function AdvisorForm({ onStart }: AdvisorFormProps) {
             BẮT ĐẦU TƯ VẤN
           </button>
           <p className="text-center mt-6 text-xs text-on-surface-variant/60 font-body tracking-wide">
-            Hơn 10,000+ phụ huynh đã tin dùng Cố Vấn Đặt Tên
+            Dựa trên nguyên lý Thần số học Pytago ✓
 
           </p>
         </div>
